@@ -3,7 +3,6 @@
 // execute a SQL query
 
 #include "query.h"
-#include <iostream>
 #include <pqxx/pqxx>
 
 // not exception safe, catch exceptions in code that calls this function
