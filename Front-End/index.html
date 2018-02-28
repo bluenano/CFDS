@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html data-ng-app="">
+<head>
+	<title>Computer Face Detection System</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<!-- jQuery library -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<!-- Latest compiled JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<!-- Local CSS file -->
+	<link rel="stylesheet" type="text/css" href="stylez.css">
+	<!-- AngularJS-->
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+</head>
+<body>
+	<div class="container">
+		<h1><center>Computer Face Detection System</center></h1>
+		<p><center>Beta version 1.0</center></p>
+		<br>
+	</div>
+
+<div class="container">
+<div class="col-md-4 col-md-offset-4">
+  <form>
+    <div class="input-group">
+      <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+      <input id="email" type="text" class="form-control" name="email" placeholder="Email" data-ng-model="username">
+    </div>
+    <br>
+    <div class="input-group">
+      <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+      <input id="password" type="password" class="form-control" name="password" placeholder="Password" data-ng-model="password">
+    </div>
+    <br>
+
+    <!-- Submit Button-->
+	<div class="col-md-4 col-md-offset-4">
+  		<button id="button" button type="button" name="button" class="btn btn-primary">Submit</button> 
+	</div>
+
+  </form>
+  <br>
+</div>
+</div>
+
+<div class="container">
+	<div class="col-md-4 col-md-offset-4">
+		<br>
+		<a link=""><center>Forgot Password? Click Here</center></p>
+		<a link=""><center>Don't Have An Account? Click Here</center></p>
+		<br>
+	</div>
+</div>
+
+  	<script>
+		$(document).ready(function(){
+    	$(".btn").click(function(){
+        $(this).button('loading');});   
+		});
+	</script>
+
+</body>
+</html>
