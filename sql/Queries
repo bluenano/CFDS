@@ -32,4 +32,4 @@ WHERE VideoID = DataID
 (Retrieve number of frames, width, and height given a video id)
 SELECT NumFrames, Width, Height
 FROM Video
-WHERE VideoID = ...;
+WHERE VideoID = ?;
