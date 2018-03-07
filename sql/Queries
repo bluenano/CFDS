@@ -27,3 +27,9 @@ AND FrameID = ?
 SELECT X, Y 
 FROM OpenFaceData
 WHERE VideoID = DataID
+
+
+(Retrieve number of frames, width, and height given a video id)
+SELECT NumFrames, Width, Height
+FROM Video
+WHERE VideoID = ...;
