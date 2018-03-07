@@ -18,7 +18,7 @@ FROM Video
 WHERE VideoID = ?
 
 (View all Cartesian (x, y) coordinates associating with the VideoID and FrameID)
-SELECT FT_PupilLeftX, FT_PupilLeftY, FT_PupilRightX, FT_PupilRightY)
+SELECT FTPupilLeftX, FTPupilLeftY, FTPupilRightX, FTPupilRightY)
 FROM Frame
 WHERE Video ID = ? 
 AND FrameID = ?
