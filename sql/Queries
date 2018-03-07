@@ -1,0 +1,28 @@
+INSERT INTO Users (Username, Password) VALUES (?,?)
+INSERT INTO Users (FirstName, Last Name) VALUES (?,?)
+
+INSERT INTO Frame (Pupil_LeftOf) VALUES (?)
+INSERT INTO Frame (Pupil_RightOf) VALUES (?)
+INSERT INTO (NumFrames, VideoID) VALUES (?,?)
+
+(Verifying username and passwords)
+SELECT Username, Password
+FROM Users
+WHERE Username = ?
+AND Password = ?
+
+(View data of number of frames, its width and height associating with the VideoID)
+SELECT NumFrames, Width, Height 
+FROM Video 
+WHERE VideoID = ?
+
+(View all Cartesian (x, y) coordinates associating with the VideoID and FrameID)
+SELECT FT_PupilLeft, FT_PupilRight, Pupil_leftOf, Pupil_RightOf)
+FROM Frame
+WHERE Video ID = ? 
+AND FrameID = ?
+
+(View all Cartesian (x, y) coordinates from OpenFaceData)
+SELECT X, Y 
+FROM OpenFaceData
+WHERE VideoID = DataID
