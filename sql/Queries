@@ -1,3 +1,4 @@
+(Inserting users' username password, firstname and lastname)
 INSERT INTO Users (Username, Password) VALUES (?,?)
 INSERT INTO Users (FirstName, Last Name) VALUES (?,?)
 
