@@ -57,9 +57,19 @@
 </div>
 
   	<script>
-		$(document).ready(function(){
-    	$(".btn").click(function(){
-        $(this).button('loading');});   
+  		$(document).ready(function(){
+  			$(".btn").click(function(){
+  				var dataString = 'username=' + document.getElementById('username').value + '&password='+document.getElementById('password').value;
+	  			$.ajax({
+	  				type:"POST",
+	  				url: "login.php",
+	  				data: dataString,
+	  				cache: false,
+	  				success: function(data) {
+	  					console.log(data);
+	  				}
+	  			});
+		  	});
 		});
 	</script>
 
