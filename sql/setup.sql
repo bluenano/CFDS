@@ -1,3 +1,8 @@
+/*
+perform a database query on the server side toverify the
+username/password entered (for existing users) matches an appropriate 
+username and password in the database.
+*/
 CREATE TABLE IF NOT EXISTS User (
     UserID INT PRIMARY KEY,
     Username VARCHAR(255),
@@ -8,6 +13,14 @@ CREATE TABLE IF NOT EXISTS User (
     LastLoginTime TIMESTAMP
 );
 
+/*
+Your program should extract and store metadata about the video in your database. 
+The metadata that should be stored.The number of frames in the video.  
+The frames per second (fps) or frame rate the video was encoded at.    
+The horizontal (X) and vertical (Y) pixel resolution of the video.    
+A unique ID (primary key) for this video  
+The login username (i.e. registered user) of the person who uploaded this video.
+*/
 CREATE TABLE IF NOT EXISTS Video (
     VideoID INT PRIMARY KEY,
     NumFrames INT, 
