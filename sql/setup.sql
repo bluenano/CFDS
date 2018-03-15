@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS User (
     FirstName VARCHAR(255),
     LastName VARCHAR(255),
     LastIpAddress VARCHAR(16),
-    LastLoginTime TIMESTAMP
+    LastLoginTime TIMESTAMP,
     VideoID INT REFERENCE Video
 );
 
