@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS Video (
     Width INT,
     Height INT,
     FrameID INT REFERENCES Frame 
-    --DataID INT REFERENCES OpenFaceData
 );
 
 
@@ -56,7 +55,6 @@ recall that open face will return 68 points if a face
 is found in an image 
 */
 CREATE TABLE IF NOT EXISTS OpenFaceData (
-    DataID INT PRIMARY KEY,
     X REAL,
     Y REAL
 );
