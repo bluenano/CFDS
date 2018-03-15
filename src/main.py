@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
 import os
-import sys
+import psycopg2
 import subprocess
+import sys
 
 VIDEO_DIR = '/home/user/github/'
 VIDEO_ID = 'vid.mp4'
@@ -13,10 +14,16 @@ cmd = ['/usr/bin/ffprobe', '-count_frames', '-select_streams', 'v:0', '-show_ent
 
 width, height, frame_rate, frame_count = subprocess.check_output(cmd, universal_newlines=True).split(',')
 
-print(width)
-print(height)
-print(frame_rate)
-print(frame_count)
+conn = psycopg2.connect(host='localhost', dbname='DB', user='USER', password='PASS')
+cur = conn.cursor()
+sql = '''INSERT INTO video (frame_count, frame_rate, width, height)
+    VALUES (%s, %s, %s, %s) RETURNING video_id;'''
+arg = frame_count, frame_rate, width, height
+cur.execute(sql, arg)
+video_id = str(cur.fetchone()[0])
+conn.commit()
+cur.close()
+conn.close()
 
 try:
     os.makedirs(FRAMES_DIR, 0o777)
