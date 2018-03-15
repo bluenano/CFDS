@@ -1,3 +1,11 @@
+/*
+You can run the script by first making sure the postgres server
+is running and by starting psql and connecting to a specified
+database. 
+
+Then in psql, run \i path_to_setup.sql 
+*/
+
 CREATE TABLE IF NOT EXISTS UserInfo (
     UserID INT PRIMARY KEY,
     Username VARCHAR(255),
