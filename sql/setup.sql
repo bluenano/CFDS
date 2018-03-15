@@ -7,7 +7,7 @@ Then in psql, run \i path_to_setup.sql
 */
 
 CREATE TABLE IF NOT EXISTS UserInfo (
-    UserID INT PRIMARY KEY,
+    UserID SERIAL PRIMARY KEY,
     Username VARCHAR(255),
     Password VARCHAR(255),
     FirstName VARCHAR(255),
@@ -25,8 +25,8 @@ A unique ID (primary key) for this video
 The login username (i.e. registered user) of the person who uploaded this video.
 */
 CREATE TABLE IF NOT EXISTS Video (
-    VideoID INT PRIMARY KEY,
-    UserID INT REFERENCES UserInfo(UserID),
+    VideoID SERIAL PRIMARY KEY,
+    UserID SERIAL REFERENCES UserInfo(UserID),
     NumFrames INT, 
     FramesPerSecond INT, 
     Width INT,
@@ -41,7 +41,7 @@ although the assignments do not specify using OpenFace to get these
 points so we will only store points from FT's algorithm
 */
 CREATE TABLE IF NOT EXISTS Frame (
-    VideoID INT REFERENCES Video(VideoID),
+    VideoID SERIAL REFERENCES Video(VideoID),
     FTPupilRightX REAL,
     FTPupilRightY REAL,
     FTPupilLeftX REAL,
@@ -60,5 +60,5 @@ is found in an image
 CREATE TABLE IF NOT EXISTS OpenFaceData (
     X REAL,
     Y REAL,
-    VideoID INT REFERENCES Video(VideoID)
+    VideoID SERIAL REFERENCES Video(VideoID)
 );
