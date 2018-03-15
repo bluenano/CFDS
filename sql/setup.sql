@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS User (
     LastName VARCHAR(255),
     LastIpAddress VARCHAR(16),
     LastLoginTime TIMESTAMP,
-    VideoID INT REFERENCE Video
+    --VideoID INT REFERENCE Video
 );
 
 /*
@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS Video (
     FramesPerSecond INT, 
     Width INT,
     Height INT,
-    FrameID INT REFERENCES Frame 
+    FOREIGN KEY (UserID) INT REFERENCES User(UserID)
+    --FrameID INT REFERENCES Frame 
 );
 
 
@@ -46,7 +47,8 @@ CREATE TABLE IF NOT EXISTS Frame (
     FTPupilLeftY REAL,
     Roll REAL,
     Pitch REAL,
-    Yaw REAL
+    Yaw REAL,
+    FOREIGN KEY (VideoID) INT REFERENCES Video(VideoID)
 );
 
 /*
@@ -57,5 +59,6 @@ is found in an image
 */
 CREATE TABLE IF NOT EXISTS OpenFaceData (
     X REAL,
-    Y REAL
+    Y REAL,
+    FOREIGN KEY (VideoID) INT REFERENCES Video(VideoID)
 );
