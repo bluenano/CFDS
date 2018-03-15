@@ -1,3 +1,8 @@
+/*
+perform a database query on the server side toverify the
+username/password entered (for existing users) matches an appropriate 
+username and password in the database.
+*/
 CREATE TABLE IF NOT EXISTS User (
     UserID INT PRIMARY KEY,
     Username VARCHAR(255),
@@ -5,9 +10,18 @@ CREATE TABLE IF NOT EXISTS User (
     FirstName VARCHAR(255),
     LastName VARCHAR(255),
     LastIpAddress VARCHAR(16),
-    LastLoginTime TIMESTAMP
+    LastLoginTime TIMESTAMP,
+    VideoID INT REFERENCE Video
 );
 
+/*
+Your program should extract and store metadata about the video in your database. 
+The metadata that should be stored.The number of frames in the video.  
+The frames per second (fps) or frame rate the video was encoded at.    
+The horizontal (X) and vertical (Y) pixel resolution of the video.    
+A unique ID (primary key) for this video  
+The login username (i.e. registered user) of the person who uploaded this video.
+*/
 CREATE TABLE IF NOT EXISTS Video (
     VideoID INT PRIMARY KEY,
     NumFrames INT, 
@@ -15,7 +29,6 @@ CREATE TABLE IF NOT EXISTS Video (
     Width INT,
     Height INT,
     FrameID INT REFERENCES Frame 
-    --DataID INT REFERENCES OpenFaceData
 );
 
 
@@ -26,7 +39,7 @@ although the assignments do not specify using OpenFace to get these
 points so we will only store points from FT's algorithm
 */
 CREATE TABLE IF NOT EXISTS Frame (
-    FrameID INT PRIMARY KEY,
+    --FrameID INT PRIMARY KEY,
     FTPupilRightX REAL,
     FTPupilRightY REAL,
     FTPupilLeftX REAL,
@@ -43,7 +56,6 @@ recall that open face will return 68 points if a face
 is found in an image 
 */
 CREATE TABLE IF NOT EXISTS OpenFaceData (
-    DataID INT PRIMARY KEY,
     X REAL,
     Y REAL
 );
