@@ -1,11 +1,11 @@
-CREATE TABLE IF NOT EXISTS User (
+CREATE TABLE IF NOT EXISTS UserInfo (
     UserID INT PRIMARY KEY,
     Username VARCHAR(255),
     Password VARCHAR(255),
     FirstName VARCHAR(255),
     LastName VARCHAR(255),
     LastIpAddress VARCHAR(16),
-    LastLoginTime TIMESTAMP,
+    LastLoginTime TIMESTAMP
 );
 
 /*
@@ -18,11 +18,11 @@ The login username (i.e. registered user) of the person who uploaded this video.
 */
 CREATE TABLE IF NOT EXISTS Video (
     VideoID INT PRIMARY KEY,
+    UserID INT REFERENCES UserInfo(UserID),
     NumFrames INT, 
     FramesPerSecond INT, 
     Width INT,
-    Height INT,
-    FOREIGN KEY (UserID) INT REFERENCES User(UserID)
+    Height INT
 );
 
 
@@ -33,15 +33,14 @@ although the assignments do not specify using OpenFace to get these
 points so we will only store points from FT's algorithm
 */
 CREATE TABLE IF NOT EXISTS Frame (
-    --FrameID INT PRIMARY KEY,
+    VideoID INT REFERENCES Video(VideoID),
     FTPupilRightX REAL,
     FTPupilRightY REAL,
     FTPupilLeftX REAL,
     FTPupilLeftY REAL,
     Roll REAL,
     Pitch REAL,
-    Yaw REAL,
-    FOREIGN KEY (VideoID) INT REFERENCES Video(VideoID)
+    Yaw REAL
 );
 
 /*
@@ -53,5 +52,5 @@ is found in an image
 CREATE TABLE IF NOT EXISTS OpenFaceData (
     X REAL,
     Y REAL,
-    FOREIGN KEY (VideoID) INT REFERENCES Video(VideoID)
+    VideoID INT REFERENCES Video(VideoID)
 );
