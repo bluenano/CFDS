@@ -38,7 +38,7 @@ although the assignments do not specify using OpenFace to get these
 points so we will only store points from FT's algorithm
 */
 CREATE TABLE IF NOT EXISTS Frame (
-    FrameID INT PRIMARY KEY,
+    --FrameID INT PRIMARY KEY,
     FTPupilRightX REAL,
     FTPupilRightY REAL,
     FTPupilLeftX REAL,
