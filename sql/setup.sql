@@ -1,8 +1,3 @@
-/*
-perform a database query on the server side toverify the
-username/password entered (for existing users) matches an appropriate 
-username and password in the database.
-*/
 CREATE TABLE IF NOT EXISTS User (
     UserID INT PRIMARY KEY,
     Username VARCHAR(255),
@@ -11,7 +6,6 @@ CREATE TABLE IF NOT EXISTS User (
     LastName VARCHAR(255),
     LastIpAddress VARCHAR(16),
     LastLoginTime TIMESTAMP,
-    --VideoID INT REFERENCE Video
 );
 
 /*
@@ -29,7 +23,6 @@ CREATE TABLE IF NOT EXISTS Video (
     Width INT,
     Height INT,
     FOREIGN KEY (UserID) INT REFERENCES User(UserID)
-    --FrameID INT REFERENCES Frame 
 );
 
 
