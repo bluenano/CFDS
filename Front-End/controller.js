@@ -5,8 +5,24 @@ app.controller('signUpCtrl', function($scope, $http) {
 
 	$scope.createAccount = function ()
 	{
-		//Insert server with url
-		$http.post("url/server.php", {'username': $scope.username, 'email': $scope.email, 'password': $scope.password1});    
+		var username = $scope.username;
+		var email = $scope.email;
+		var firstname = $scope.firstname;
+		var lastname = $scope.lastname;
+		var password = $scope.password1;
+
+		var dataArray = {username, email, firstname, lastname, password};
+		    
+		$.ajax({
+	  		type:"POST",
+	  		url: "index.php",
+	  		data: dataArray,
+	  		cache: false,
+	  		success: function(data) {
+	  		console.log(data);
+	  		}
+	  	});
+
 	}
 
 	$scope.display = function ()
