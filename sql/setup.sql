@@ -9,7 +9,7 @@ Then in psql, run \i path_to_setup.sql
 CREATE TABLE IF NOT EXISTS UserInfo (
     UserID SERIAL PRIMARY KEY,
     Username VARCHAR(255),
-    Password VARCHAR(255),
+    Password CHAR(60),
     FirstName VARCHAR(255),
     LastName VARCHAR(255),
     LastIp VARCHAR(16),
