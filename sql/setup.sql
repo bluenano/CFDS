@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS UserInfo (
     Password VARCHAR(255),
     FirstName VARCHAR(255),
     LastName VARCHAR(255),
-    LastIpAddress VARCHAR(16),
-    LastLoginTime TIMESTAMP
+    LastIp VARCHAR(16),
+    LastLogin TIMESTAMP
 );
 
 /*
