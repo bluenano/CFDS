@@ -28,7 +28,7 @@ function connect($file = 'database.ini') {
 	// LastIp and LastLogin are set at login
 	// wlll we be automatically logging users in at account creation?
 function create_new_user($conn, $username, $password, $firstname, $lastname) {
-	if (!(isUnique($conn, $username))) {
+	if (!(is_unique($conn, $username))) {
 		return FALSE;
 	}
 
@@ -48,7 +48,7 @@ function create_new_user($conn, $username, $password, $firstname, $lastname) {
 
 
 function insert_session_id($conn, $username, $length = 32) {
-	$session = generate_random_string($length = 32); 
+	$session = generate_random_string($length); 
 	$stmt = $conn->prepare('UPDATE UserInfo SET SessionID = :session WHERE Username = :username');
 	$stmt->execute(array(':session' => $session, ':username' => $username));
 	return password_hash($session, PASSWORD_BCRYPT);
