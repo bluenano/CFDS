@@ -3,7 +3,7 @@
 // for extra security store the settings in a *.ini file and parse it
 function connect($file = 'database.ini') {
 	if (!$settings = parse_ini_file($file, true)) {
-	return null;
+		return null;
 	}
 		
 
@@ -23,16 +23,16 @@ function connect($file = 'database.ini') {
 }
 
 	
-	// UserInfo(Username, Password, FirstName, LastName, LastIp, LastLogin)
+	// UserInfo(Username, Password, FirstName, LastName, LastIp, LastLogin, SessionID)
 	// FirstName and LastName are not required to be set 
 	// LastIp and LastLogin are set at login
 	// wlll we be automatically logging users in at account creation?
-function createNewUser($conn, $username, $password, $firstname, $lastname) {
+function create_new_user($conn, $username, $password, $firstname, $lastname) {
 	if (!(isUnique($conn, $username))) {
 		return FALSE;
 	}
 
-	$hash = password_hash($password, PASSWORD_DEFAULT);
+	$hash = password_hash($password, PASSWORD_BCRYPT);
 	$sql = 'INSERT INTO UserInfo (Username, Password, FirstName, LastName) ' .
 		       'VALUES (:username, :password, :firstname, :lastname)';
 		
@@ -47,56 +47,106 @@ function createNewUser($conn, $username, $password, $firstname, $lastname) {
 }
 
 
-function verifyLogin($conn, $username, $password) {
-	$hash = queryPassword($conn, $username);
-	return password_verify($password, $hash['password'])
-		   &&
-	       verifyUsername($conn, $username);
+function insert_session_id($conn, $username, $length = 32) {
+	$session = generate_random_string($length = 32); 
+	$stmt = $conn->prepare('UPDATE UserInfo SET SessionID = :session WHERE Username = :username');
+	$stmt->execute(array(':session' => $session, ':username' => $username));
+	return password_hash($session, PASSWORD_BCRYPT);
 }
 
 
-function verifyUsername($conn, $username) {
-	$result = queryUsername($conn, $username);
+function update_after_login($conn, $username, $ip, $login) {
+	$stmt = $conn->prepare('UPDATE UserInfo SET LastIp = :ip, LastLogin = :login WHERE Username = :username');
+	$stmt->execute(array(':ip' => $ip, ':login' => $login, ':username' => $username));
+	return $stmt->execute();
+}
+
+
+function verify_login($conn, $username, $password) {
+	$hash = query_password($conn, $username);
+	return password_verify($password, $hash['password'])
+		   &&
+	       verify_username($conn, $username);
+}
+
+
+function verify_username($conn, $username) {
+	$result = query_username($conn, $username);
 	return $result['username'] === $username;
 }
 
 
-function queryUsername($conn, $username) {
+function verify_session($conn, $username, $from_client) {
+	$session = query_session_id($conn, $username);
+ 	return password_verify($session['sessionid'], $from_client);
+}
+
+
+function query_username($conn, $username) {
 	$stmt = $conn->prepare('SELECT * FROM UserInfo WHERE Username = :username LIMIT 1');
 	$stmt->execute(array('username' => $username));
 	return $stmt->fetch();
 }
 
 
-function isUnique($conn, $username) {
-	$row = queryUsername($conn, $username);
-	return is_null($row[0]);
-} 
-
-
-function queryPassword($conn, $username) {
+function query_password($conn, $username) {
 	$stmt = $conn->prepare('SELECT password FROM UserInfo WHERE Username = :username');
 	$stmt->execute(array(':username' => $username));
 	return $stmt->fetch();
 }
 
-?>
 
+function query_user_id($conn, $username) {
+	$stmt = $conn->prepare('SELECT UserID FROM UserInfo WHERE Username = :username');
+	$stmt->execute(array(':username' => $username));
+	return $stmt->fetch();
+}
+
+
+function query_session_id($conn, $username) {
+	$stmt = $conn->prepare('SELECT SessionID FROM UserInfo WHERE Username = :username');
+	$stmt->execute(array(':username' => $username));
+	return $stmt->fetch();
+}
+
+
+function is_unique($conn, $username) {
+	$row = query_username($conn, $username);
+	return is_null($row[0]);
+} 
+
+
+// uses a CSPRNG
+function generate_random_string($length = 32) {
+	$result = "";
+	for ($i = 0; $i < $length; $i++) {
+		$random = random_int(33, 126);
+		$result .= chr($random);
+	}
+	return $result;
+}
+
+?>
 
 <?php
 
 // testing
+
+//$conn= connect();
+
+//createNewUser($conn, 'sean', 'password', $firstname = null, $lastname = null);
 /*
-$conn= connect();
-if (is_null($conn)) {
-	echo 'failed to connect' . "\n";
-	exit;
-}
-createNewUser($conn, 'sean', 'password', $firstname = null, $lastname = null);
 if (verifyLogin($conn, 'sean', 'password')) {
 	echo 'Logged in' . "\n";
 } else {
 	echo 'Cannot login' . "\n";
+}
+*/
+
+/*
+$encrypted = insertSessionID($conn, 'sean');
+if (verifySession($conn, 'sean', $encrypted)) {
+	echo 'valid session id' . "\n";
 }
 */
 ?>
