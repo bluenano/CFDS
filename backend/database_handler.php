@@ -8,9 +8,9 @@ function connect($file = 'database.ini') {
         
 
     $dns = $settings['database']['driver'] .
-    ':host=' . $settings['database']['host'] .
-    ';port=' . $settings['database']['port'] . 
-    ';dbname=' . $settings['database']['schema'];
+           ':host=' . $settings['database']['host'] .
+           ';port=' . $settings['database']['port'] . 
+           ';dbname=' . $settings['database']['schema'];
     try {
         $conn = new PDO($dns, $settings['database']['username'],
                         $settings['database']['password']);
