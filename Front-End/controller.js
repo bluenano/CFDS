@@ -1,6 +1,15 @@
 
 var app = angular.module('myApp', []);
 
+
+//Upload controller content 
+app.controller('uploadCtrl', function($scope, $http) {
+
+});
+
+
+//End of Upload Controller Content
+
 app.controller('signUpCtrl', function($scope, $http) {
 
 	$scope.createAccount = function ()
@@ -22,16 +31,9 @@ app.controller('signUpCtrl', function($scope, $http) {
 	  		console.log(data);
 	  		}
 	  	});
-
 	}
-
-	$scope.display = function ()
-	{
-		console.log($scope.username);
-		console.log($scope.email);
-		console.log($scope.password1);
-		console.log($scope.password2);
-
-	}
-
 });
+
+
+
+
