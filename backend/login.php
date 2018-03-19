@@ -20,7 +20,7 @@ function exit_script_on_failure() {
 include("database_handler.php");
 
 if (!isset($_POST['username']) 
-    OR
+    ||
     !isset($_POST['password']))  {
     exit_script_on_failure();
 } 
@@ -36,6 +36,7 @@ if (is_null($conn)) {
 $username = $_POST['username'];
 $password = $_POST['password'];
  
+
 if (!(verify_login($conn, $username, $password))) {
     exit_script_on_failure();
 }

@@ -33,6 +33,7 @@ function create_new_user($conn, $username, $password, $firstname, $lastname) {
     }
 
     $hash = password_hash($password, PASSWORD_BCRYPT);
+    echo strlen($hash) . "\n";
     $sql = 'INSERT INTO UserInfo (Username, Password, FirstName, LastName) ' .
                'VALUES (:username, :password, :firstname, :lastname)';
         
@@ -40,9 +41,9 @@ function create_new_user($conn, $username, $password, $firstname, $lastname) {
     $stmt->bindParam(':username', $username, PDO::PARAM_STR);
     $stmt->bindParam(':password', $hash, PDO::PARAM_STR);
     isset($firstname) ? $stmt->bindParam(':firstname', $firstname, PDO::PARAM_STR)
-                      : $stmt->bindParam(':firstname', null, PDO::PARAM_NULL);
+                      : $stmt->bindValue(':firstname', null, PDO::PARAM_INT);
     isset($lastname)  ? $stmt->bindParam(':lastname', $lastname, PDO::PARAM_STR)
-                      : $stmt->bindParam(':lastname', null, PDO::PARAM_NULL);
+                      : $stmt->bindValue(':lastname', null, PDO::PARAM_INT);
     return $stmt->execute();
 }
 
@@ -67,7 +68,7 @@ function update_after_login($conn, $username, $ip, $login) {
 function verify_login($conn, $username, $password) {
     $hash = query_password($conn, $username);
     return password_verify($password, $hash['password'])
-           AND
+           &&
            verify_username($conn, $username);
 }
 
@@ -136,7 +137,7 @@ function generate_random_string($length = 32) {
 
 // testing
 
-// $conn= connect();
+//$conn= connect();
 
 /*
 $session_id = insert_session_id($conn, 'sean');
@@ -147,10 +148,9 @@ if (verify_session($conn, 'sean', $session_id)) {
     echo 'invalid session id' . "\n";
 }
 */ 
-
-//createNewUser($conn, 'sean', 'password', $firstname = null, $lastname = null);
 /*
-if (verifyLogin($conn, 'sean', 'password')) {
+create_new_user($conn, 'sean', 'password', $firstname = null, $lastname = null);
+if (verify_login($conn, 'sean', 'password')) {
     echo 'Logged in' . "\n";
 } else {
     echo 'Cannot login' . "\n";

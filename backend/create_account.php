@@ -10,14 +10,15 @@ include("database_handler.php");
 
 
 if (!isset($_POST['username'])
-    OR
+    ||
     !isset($_POST['password'])) {
     exit_script_on_failure();
 }
 
 
 $username = $_POST['username'];
-$password = $_POST['username'];
+$password = $_POST['password'];
+
 $firstname = isset($_POST['firstname']) ? $_POST['firstname'] : null;
 $lastname = isset($_POST['lastname']) ? $_POST['lastname'] : null;
 
