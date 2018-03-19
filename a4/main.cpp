@@ -47,10 +47,9 @@ Also, I can get delauny triangles working too, see second half of file.
 */
 typedef dlib::point lmCoord;//lanmark coord
 
+#if 0
 static void doSomethingWith68Points(const lmCoord* arr);//no length passed, implied 68
 
-
-#if 1
 int main(int argc, char **argv)
 {
     if (argc<2 || argc>=4)
@@ -136,7 +135,15 @@ static void doSomethingWith68Points(const lmCoord* arr)//no length passed, impli
 */
 
 #else
-static void drawDelaunay68(cv::Mat& im, const dlFaceMarkResults& parts);
+#define ERROR(M) do{puts(M); return -1;}while(0)
+static void drawDelaunay68(cv::Mat& im, const lmCoord* marks);
+
+// The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
+struct PoseEuler
+{
+    cv::Vec3d trans, rot_eul;
+};
+static PoseEuler getPoseAndDraw(cv::Mat& im, const lmCoord* marks);
 
 int main(int argc, char **argv)
 {
@@ -176,7 +183,7 @@ int main(int argc, char **argv)
         sprintf(pmsd, "%u.png", i);//quick and dirty
         cv::Mat im = cv::imread(buf);//this return style means it allocates every time...
 
-        #define ERROR(M) do{puts(M); return -1;}while(0)
+
         if (im.empty())
             ERROR("error loading image");
 
@@ -186,16 +193,35 @@ int main(int argc, char **argv)
         std::vector<dlib::rectangle> const faces = faceRectFinder.findFaceRects(cimg);
         if (faces.empty())
             ERROR("no face detected");
-        dlFaceMarkResults const marks = markDetector.detectMarks(cimg, faces[0]);
-        if (marks.num_parts()!=68)
+        dlFaceMarkResults const detRes = markDetector.detectMarks(cimg, faces[0]);
+        if (detRes.num_parts()!=68)
             ERROR("num_parts not 68");
 
+        const lmCoord *const marks = &detRes.part(0);
+
         drawDelaunay68(im, marks);
+        //The return value is not in the format of 3 euler angles
+        //Is drawing the projection enough?
+        //If we need the points somewhere
+        (void)getPoseAndDraw(im, marks);
+        /*This throws, cant specify writer?
+        PoseEuler const v = getPoseAndDraw(im, marks);
+
+        //CHECK IF IMAGE NOT TOO SMALL
+        char buf[512];
+        sprintf(buf, "Tx=%3.3f, Ty=%3.3f, Tz=%3.3f\nyaw=%3.3f, pitch=%3.3f, roll=%3.3f",
+                v.trans[0], v.trans[1], v.trans[2], v.rot_eul[0], v.rot_eul[1], v.rot_eul[2]);
+
+        const int fontFace = cv::FONT_HERSHEY_SCRIPT_SIMPLEX;
+        const double fontScale = 2;
+        const int thickness = 3;
+        const cv::Point textOrg(4, 4);
+        cv::putText(im, buf, textOrg, fontFace, fontScale, cv::Scalar::all(255), thickness, 8);
+        */
 
         pmsd[-1] = 'z';//temp overwrite '.' so make new img
         cv::imwrite(buf, im);
         pmsd[-1] = '.';
-        #undef ERROR
     }
 
     return 0;
@@ -205,14 +231,14 @@ int main(int argc, char **argv)
 //I tested it on rob.png from his delauny sample, worked good
 
 //location of all 68 points are known relative to each other, can draw directly
-void drawDelaunay68(cv::Mat& im, const dlFaceMarkResults& parts)
+void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks)
 {
     cv::Size const dims = im.size();
     cv::Rect const rect = {0,0,dims.width,dims.height};
 	cv::Subdiv2D subdiv(rect);
 	for (unsigned i=0; i!=68; ++i)
 	{
-		dlib::point dpt = parts.part(i);
+		lmCoord const dpt = lndmks[i];
 		subdiv.insert({float(dpt.x()), float(dpt.y())});
 	}
 	std::vector< cv::Vec6f > trilist;
@@ -233,15 +259,135 @@ void drawDelaunay68(cv::Mat& im, const dlFaceMarkResults& parts)
             cv::line(im, pt2, pt0, delaunay_color, 1, CV_AA, 0);
         }
     }
-
+    //do this after so points are on top of triangle edges, I think looks nicer
     for (unsigned i=0; i!=68; ++i)
-    {
-        dlib::point dpt = parts.part(i);
+	{
+		lmCoord const dpt = lndmks[i];//TODO, change radius based on dims
+		cv::circle(im, cv::Point(dpt.x(), dpt.y()), 2, cv::Scalar(0, 0, 255), CV_FILLED, CV_AA, 0);
+	}
+}
 
-        cv::circle(im, cv::Point(dpt.x(), dpt.y()), 4, cv::Scalar(0, 0, 255), CV_FILLED, CV_AA, 0);
-    }
+inline cv::Point2d lmc2cv2d(const lmCoord v)
+{
+    return cv::Point2d(v.x(), v.y());
+}
+
+cv::Vec3d AxisAngle2Euler(const cv::Vec3d& axis_angle);
+
+static PoseEuler getPoseAndDraw(cv::Mat& im, const lmCoord* marks)
+{
+    using namespace cv;
+
+    const std::array<Point2d, 6> image_points =
+    {{
+        lmc2cv2d(marks[30]),//Nose tip
+        lmc2cv2d(marks[ 8]),//Bottom of Chin
+        lmc2cv2d(marks[36]),//Left eye left corner
+        lmc2cv2d(marks[45]),//Right eye right corner
+        lmc2cv2d(marks[48]),//Right mouth corner
+        lmc2cv2d(marks[54])
+    }};
+
+    for (Point2d const point : image_points)
+        circle(im, point, 4, cv::Scalar(0, 255, 0), CV_FILLED, CV_AA, 0);
+
+    static
+    const std::array<Point3d, 6> model_points =
+    {{
+        Point3d(0.0f, 0.0f, 0.0f),               // Nose tip
+        Point3d(0.0f, -330.0f, -65.0f),          // Chin
+        Point3d(-225.0f, 170.0f, -135.0f),       // Left eye left corner
+        Point3d(225.0f, 170.0f, -135.0f),        // Right eye right corner
+        Point3d(-150.0f, -150.0f, -125.0f),      // Left Mouth corner
+        Point3d(150.0f, -150.0f, -125.0f)        // Right mouth corner
+    }};
+
+    // Camera internals
+    double focal_length = im.cols; // Approximate focal length.
+    Point2d center = cv::Point2d(im.cols/2,im.rows/2);
+    cv::Mat camera_matrix = (cv::Mat_<double>(3,3) << focal_length, 0, center.x, 0 , focal_length, center.y, 0, 0, 1);
+    cv::Mat dist_coeffs = cv::Mat::zeros(4,1,cv::DataType<double>::type); // Assuming no lens distortion
+    // Output rotation and translation
+    //cv::Mat translation_vector, rotation_vector; // Rotation in axis-angle form
+    cv::Vec3d translation_vector, rotation_vector; // Rotation in axis-angle form
+
+
+    // Solve for pose
+    cv::solvePnP(model_points, image_points, camera_matrix, dist_coeffs, rotation_vector, translation_vector);
+    // Project a 3D point (0, 0, 1000.0) onto the image plane.
+    // We use this to draw a line sticking out of the nose
+
+    static
+    const std::array<Point3d, 1> nose_end_point3D = {{Point3d(0,0,1000.0)}};
+
+    std::vector<Point2d> nose_end_point2D;
+
+    projectPoints(nose_end_point3D, rotation_vector, translation_vector, camera_matrix, dist_coeffs, nose_end_point2D);
+
+    cv::line(im, image_points[0], nose_end_point2D[0], cv::Scalar(0,255,255), 2);
+
+    return PoseEuler{translation_vector, AxisAngle2Euler(rotation_vector)};
 }
 #endif
+
+
+#if 1
+//The following two functions are pasted from OpenFace
+
+// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
+cv::Vec3d RotationMatrix2Euler(const cv::Matx33d& rotation_matrix)
+{
+    double q0 = sqrt(1 + rotation_matrix(0, 0) + rotation_matrix(1, 1) + rotation_matrix(2, 2)) / 2.0;
+    double q1 = (rotation_matrix(2, 1) - rotation_matrix(1, 2)) / (4.0*q0);
+    double q2 = (rotation_matrix(0, 2) - rotation_matrix(2, 0)) / (4.0*q0);
+    double q3 = (rotation_matrix(1, 0) - rotation_matrix(0, 1)) / (4.0*q0);
+
+    //double t1 = 2.0 * (q0*q2 + q1*q3);//unused variable?
+
+    double yaw = asin(2.0 * (q0*q2 + q1*q3));
+    double pitch = atan2(2.0 * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
+    double roll = atan2(2.0 * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
+
+    return cv::Vec3d(pitch, yaw, roll);
+}
+
+//This is from
+//https://www.learnopencv.com/rotation-matrix-to-euler-angles/
+cv::Vec3d rotationMatrixToEulerAngles(const cv::Matx33d &R)
+{
+    using cv::Vec3d;
+    double sy = sqrt(R(0,0) * R(0,0) +  R(1,0) * R(1,0) );
+
+    bool singular = sy < 1e-6; // If
+
+    if (!singular)
+        return Vec3d(atan2(R(2,1) , R(2,2)),
+                     atan2(-R(2,0), sy),
+                     atan2(R(1,0), R(0,0)));
+    else
+        return Vec3d(atan2(-R(1,2), R(1,1)),
+                          atan2(-R(2,0), sy),
+                          0.0);
+}
+
+cv::Vec3d AxisAngle2Euler(const cv::Vec3d& axis_angle)
+{
+    cv::Matx33d rotation_matrix;
+    cv::Rodrigues(axis_angle, rotation_matrix);
+    //return RotationMatrix2Euler(rotation_matrix);//openface version
+    return rotationMatrixToEulerAngles(rotation_matrix);//learn opencv version
+}
+
+#endif
+
+#if 0
+    cv::solvePnP(landmarks_3D, landmarks_2D, camera_matrix, cv::Mat(), vec_rot, vec_trans, true);
+
+    cv::Vec3d euler = Utilities::AxisAngle2Euler(vec_rot);
+
+    return cv::Vec6d(vec_trans[0], vec_trans[1], vec_trans[2], euler[0], euler[1], euler[2]);
+
+#endif // 0
 
 /*
 from 3:
@@ -250,6 +396,11 @@ For example, still images from a video with video ID 100 saved in the PNG file f
 100.1.png
 100.2.png
 100.3.png
+
+OpenCV Error: Unspecified error (could not find a writer for the specified extension) in imwrite_, file /home/jw/opencv/opencv-3.3.0/modules/imgcodecs/src/loadsave.cpp, line 604
+terminate called after throwing an instance of 'cv::Exception'
+  what():  /home/jw/opencv/opencv-3.3.0/modules/imgcodecs/src/loadsave.cpp:604: error: (-2) could not find a writer for the specified extension in function imwrite_
+
 */
 
 
