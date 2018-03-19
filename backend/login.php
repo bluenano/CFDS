@@ -6,7 +6,7 @@ function end_session() {
     session_destroy();
 }
 
-function exit_script() {
+function exit_script_on_failure() {
     end_session();
     echo 0;
     exit;
@@ -15,12 +15,14 @@ function exit_script() {
 ?>
 
 <?php
+// need to implement further error handling
+
 include("database_handler.php");
 
 if (!isset($_POST['username']) 
-    ||
+    OR
     !isset($_POST['password']))  {
-    exit_script();
+    exit_script_on_failure();
 } 
 
 date_default_timezone_set("America/Los_Angeles");
@@ -28,14 +30,14 @@ date_default_timezone_set("America/Los_Angeles");
 $conn = connect();
 if (is_null($conn)) {
     echo 'Failed to connect to database' . "\n";
-    exit_script();
+    exit_script_on_failure();
 }
 
 $username = $_POST['username'];
 $password = $_POST['password'];
  
 if (!(verify_login($conn, $username, $password))) {
-    exit_script();
+    exit_script_on_failure();
 }
 
 // could store the id from the db to pass to other php scripts
@@ -50,5 +52,5 @@ update_after_login($conn, $username, $ip, $time);
 // echo the session back to client
 // if client receives a session, then login was successful
 // load user account page
-echo $session . "\n";   
+echo $session;   
 ?>

@@ -24,7 +24,7 @@ app.controller('signUpCtrl', function($scope, $http) {
 		    
 		$.ajax({
 	  		type:"POST",
-	  		url: "index.php",
+	  		url: "create_account.php",
 	  		data: dataArray,
 	  		cache: false,
 	  		success: function(data) {
