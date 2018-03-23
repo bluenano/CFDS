@@ -5,11 +5,12 @@ import psycopg2
 import subprocess
 import sys
 
-VIDEO_DIR = '/home/user/github/'
-VIDEO_ID = 'vid.mp4'
+UPLOAD_DIR = '/home/user/github/'
+UPLOAD_FILENAME = 'vid.mp4'
 FRAMES_DIR = '/home/user/github/vid_frames/'
+OUTPUT_DIR = '/home/user/github/output/'
 
-cmd = ['/usr/bin/ffprobe', '-count_frames', '-select_streams', 'v:0', '-show_entries',
+cmd = ['/usr/bin/ffprobe', '-v', 'quiet', '-count_frames', '-select_streams', 'v:0', '-show_entries',
     'stream=height,width,avg_frame_rate,nb_read_frames', '-of', 'csv=p=0:nk=1', VIDEO_DIR + VIDEO_ID]
 
 width, height, frame_rate, frame_count = subprocess.check_output(cmd, universal_newlines=True).split(',')
@@ -25,16 +26,23 @@ conn.commit()
 cur.close()
 conn.close()
 
-try:
-    os.makedirs(FRAMES_DIR, 0o777)
-except OSError:
-        pass
+os.rename(UPLOAD_FILENAME, video_id)
 
-cmd = ['/usr/bin/ffmpeg', '-i', VIDEO_DIR + VIDEO_ID, FRAMES_DIR + '/%d.png']
+#try:
+#    os.makedirs(FRAMES_DIR, 0o777)
+#except OSError:
+#        pass
+
+#try:
+#    os.makedirs(UPLOAD_DIR, 0o777)
+#except OSError:
+#        pass
+
+cmd = ['/usr/bin/ffmpeg', '-v', 'quiet', '-i', UPLOAD_DIR + video_id, FRAMES_DIR + video_id + '.%d.png']
 
 subprocess.check_call(cmd)
 
-cmd = ['/usr/bin/ffmpeg', '-r', frame_rate, '-i', FRAMES_DIR + '/%d.png',
-   '-c:v', 'libvpx-vp9', '-b:v', '1M', VIDEO_DIR + VIDEO_ID + '.webm']
+cmd = ['/usr/bin/ffmpeg', '-v', 'quiet', '-r', frame_rate, '-i', FRAMES_DIR + video_id + '.%d.png',
+   '-c:v', 'libvpx-vp9', '-b:v', '1M', OUTPUT_DIR + video_id + '.webm']
 
 subprocess.check_call(cmd)
