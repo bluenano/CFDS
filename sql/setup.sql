@@ -1,17 +1,20 @@
 /*
-perform a database query on the server side toverify the
-username/password entered (for existing users) matches an appropriate 
-username and password in the database.
+You can run the script by first making sure the postgres server
+is running and by starting psql and connecting to a specified
+database. 
+
+Then in psql, run \i path_to_setup.sql 
 */
-CREATE TABLE IF NOT EXISTS User (
-    UserID INT PRIMARY KEY,
+
+CREATE TABLE IF NOT EXISTS UserInfo (
+    UserID SERIAL PRIMARY KEY,
     Username VARCHAR(255),
-    Password VARCHAR(255),
+    Password CHAR(60),
     FirstName VARCHAR(255),
     LastName VARCHAR(255),
-    LastIpAddress VARCHAR(16),
-    LastLoginTime TIMESTAMP,
-    VideoID INT REFERENCE Video
+    LastIp VARCHAR(16),
+    LastLogin TIMESTAMP,
+    SessionID CHAR(32)
 );
 
 /*
@@ -23,12 +26,12 @@ A unique ID (primary key) for this video
 The login username (i.e. registered user) of the person who uploaded this video.
 */
 CREATE TABLE IF NOT EXISTS Video (
-    VideoID INT PRIMARY KEY,
+    VideoID SERIAL PRIMARY KEY,
+    UserID SERIAL REFERENCES UserInfo(UserID),
     NumFrames INT, 
     FramesPerSecond INT, 
     Width INT,
-    Height INT,
-    FrameID INT REFERENCES Frame 
+    Height INT
 );
 
 
@@ -39,7 +42,7 @@ although the assignments do not specify using OpenFace to get these
 points so we will only store points from FT's algorithm
 */
 CREATE TABLE IF NOT EXISTS Frame (
-    --FrameID INT PRIMARY KEY,
+    VideoID SERIAL REFERENCES Video(VideoID),
     FTPupilRightX REAL,
     FTPupilRightY REAL,
     FTPupilLeftX REAL,
@@ -57,5 +60,6 @@ is found in an image
 */
 CREATE TABLE IF NOT EXISTS OpenFaceData (
     X REAL,
-    Y REAL
+    Y REAL,
+    VideoID SERIAL REFERENCES Video(VideoID)
 );
