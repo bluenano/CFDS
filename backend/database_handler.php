@@ -1,7 +1,9 @@
 <?php
 
 // query functions will return null if no value is found or an exception is thrown
-// uniqueness test functions will always return false on failures and exceptions
+// uniqueness test functions will return false on failures and exceptions
+// create functions will return false on failures and exceptions
+
 
 function connect($file = 'database.ini') {
     if (!$settings = parse_ini_file($file, true)) {
@@ -25,10 +27,6 @@ function connect($file = 'database.ini') {
 }
 
     
-// UserInfo(Username, Password, FirstName, LastName, LastIp, LastLogin, SessionID)
-// FirstName and LastName are not required to be set 
-// LastIp and LastLogin are set at login
-// wlll we be automatically logging users in at account creation?
 function create_new_user($conn, $username, $password, $firstname, $lastname) {
     if (!(is_unique_name($conn, $username))) {
         return FALSE;
@@ -220,8 +218,6 @@ function insert_session($conn, $id, $session) {
 }
 
 
-// uses a CSPRNG
-// may want to url encode the session id
 function generate_random_string($length = 32) {
     $result = "";
     for ($i = 0; $i < $length; $i++) {
