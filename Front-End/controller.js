@@ -33,7 +33,14 @@ app.controller('uploadCtrl', function($scope, $http)
         }
 
         var request = new XMLHttpRequest();
-        request.open('post', 'validate_video.php');
+
+        request.onreadystatechange = function() {
+            if (request.readyState == XMLHttpRequest.DONE) {
+                console.log(request.responseText);
+            }
+        }
+
+        request.open('POST', 'validate_video.php', true);
         request.send(formdata);
     }
 
