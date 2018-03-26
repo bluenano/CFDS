@@ -23,8 +23,8 @@ if (!isset($_POST['username'])
     exit_script_on_failure();
 } 
 
-
 date_default_timezone_set("America/Los_Angeles");
+
 
 $conn = connect();
 if (is_null($conn)) {
@@ -34,7 +34,6 @@ if (is_null($conn)) {
 
 $username = $_POST['username'];
 $password = $_POST['password'];
- 
 if (!(verify_login($conn, $username, $password))) {
     echo "Failed to login\n";
     exit_script_on_failure();
@@ -42,7 +41,6 @@ if (!(verify_login($conn, $username, $password))) {
 
 
 $_SESSION['id'] = query_user_id($conn, $username);
-
 if (is_null($_SESSION['id'])) {
     echo "Failed to set user id\n";
     exit_script_on_failure();
