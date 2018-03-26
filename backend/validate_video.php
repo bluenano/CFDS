@@ -3,18 +3,13 @@
 // usage: php validate_video.php video_file.ext
 // argv[1] = the video file to validate
 
-echo "<pre>";
-	print_r($_FILES);
-	echo "</pre>";
-
-
 if (count($argv) != 2) {
-	echo 0;
-	exit;
+    echo "Invalid script invocation\n";
+    exit;
 }
 
 $cmd = "ffmpeg -v error -i $argv[1] -map 0:1 -f null - 2>error.log";
-shell_exec($cmd);
+shell_exec($cmd); 
 
 $contents = file_get_contents('error.log');
 
