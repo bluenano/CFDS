@@ -14,8 +14,6 @@ shell_exec($cmd);
 $contents = file_get_contents('error.log');
 
 // if the file is empty, then the video is valid
-$result = strlen($contents) == 0 ? 1 : 0;
-
-echo $result . "\n";
+echo (strlen($contents) == 0 ? 1 : 0) . "\n";
 
 ?>
