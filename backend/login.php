@@ -17,7 +17,7 @@ function exit_script_on_failure() {
 <?php
 // need to implement further error handling
 
-include("database_handler.php");
+include('database_handler.php');
 
 if (!isset($_POST['username']) 
     ||
@@ -38,16 +38,18 @@ $password = $_POST['password'];
  
 
 if (!(verify_login($conn, $username, $password))) {
+    echo "Failed to login\n";
     exit_script_on_failure();
 }
 
 // could store the id from the db to pass to other php scripts
-$_SESSION['username'] = $username;
+$_SESSION['id'] = query_user_id($conn, $username);
 
-$session = insert_session_id($conn, $username);
+
+$session = create_session_id($conn, $_SESSION['id']);
 $ip = $_SERVER['REMOTE_ADDR'];
 $time = date('Y-m-d H:i:s');
-update_after_login($conn, $username, $ip, $time);
+update_after_login($conn, $id, $ip, $time);
 
 
 // echo the session back to client
