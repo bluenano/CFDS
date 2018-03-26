@@ -3,6 +3,11 @@
 // usage: php validate_video.php video_file.ext
 // argv[1] = the video file to validate
 
+echo "<pre>";
+	print_r($_FILES);
+	echo "</pre>";
+
+
 if (count($argv) != 2) {
 	echo 0;
 	exit;
