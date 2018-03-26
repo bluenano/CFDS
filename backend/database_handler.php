@@ -16,7 +16,7 @@ function connect($file = 'database.ini') {
                         $settings['database']['password']);
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     } catch (PDOException $e) {
-        echo 'Failed to connect to database' . "\n";
+        echo "Failed to connect to database\n";
         $conn = null;
     }
     return $conn;
@@ -33,16 +33,17 @@ function create_new_user($conn, $username, $password, $firstname, $lastname) {
     }
 
     $hash = password_hash($password, PASSWORD_BCRYPT);
+    echo strlen($hash) . "\n";
     $sql = 'INSERT INTO UserInfo (Username, Password, FirstName, LastName) ' .
                'VALUES (:username, :password, :firstname, :lastname)';
         
     $stmt = $conn->prepare($sql);   
     $stmt->bindParam(':username', $username, PDO::PARAM_STR);
     $stmt->bindParam(':password', $hash, PDO::PARAM_STR);
-    is_null($firstname) ? $stmt->bindParam(':firstname', $firstname, PDO::PARAM_STR)
-                        : $stmt->bindParam(':firstname', null, PDO::PARAM_NULL);
-    is_null($lastname)  ? $stmt->bindParam(':lastname', $lastname, PDO::PARAM_STR)
-                        : $stmt->bindParam(':lastname', null, PDO::PARAM_NULL);
+    isset($firstname) ? $stmt->bindParam(':firstname', $firstname, PDO::PARAM_STR)
+                      : $stmt->bindValue(':firstname', null, PDO::PARAM_INT);
+    isset($lastname)  ? $stmt->bindParam(':lastname', $lastname, PDO::PARAM_STR)
+                      : $stmt->bindValue(':lastname', null, PDO::PARAM_INT);
     return $stmt->execute();
 }
 
@@ -51,7 +52,9 @@ function insert_session_id($conn, $username, $length = 32) {
     $session = generate_random_string($length); 
     $stmt = $conn->prepare('UPDATE UserInfo SET SessionID = :session WHERE Username = :username');
     $stmt->execute(array(':session' => $session, ':username' => $username));
-    return password_hash($session, PASSWORD_BCRYPT);
+    $hashed = password_hash($session, PASSWORD_BCRYPT);
+    $encoded = urlencode($hashed);
+    return $encoded;
 }
 
 
@@ -78,6 +81,7 @@ function verify_username($conn, $username) {
 
 function verify_session($conn, $username, $from_client) {
     $session = query_session_id($conn, $username);
+    $from_client = urldecode($from_client);
     return password_verify($session['sessionid'], $from_client);
 }
 
@@ -117,10 +121,11 @@ function is_unique($conn, $username) {
 
 
 // uses a CSPRNG
+// may want to url encode the session id
 function generate_random_string($length = 32) {
     $result = "";
     for ($i = 0; $i < $length; $i++) {
-        $random = random_int(33, 126);
+        $random = random_int(97, 122);
         $result .= chr($random);
     }
     return $result;
@@ -134,9 +139,18 @@ function generate_random_string($length = 32) {
 
 //$conn= connect();
 
-//createNewUser($conn, 'sean', 'password', $firstname = null, $lastname = null);
 /*
-if (verifyLogin($conn, 'sean', 'password')) {
+$session_id = insert_session_id($conn, 'sean');
+
+if (verify_session($conn, 'sean', $session_id)) {
+    echo 'valid session id' . "\n";
+} else {
+    echo 'invalid session id' . "\n";
+}
+*/ 
+/*
+create_new_user($conn, 'sean', 'password', $firstname = null, $lastname = null);
+if (verify_login($conn, 'sean', 'password')) {
     echo 'Logged in' . "\n";
 } else {
     echo 'Cannot login' . "\n";
