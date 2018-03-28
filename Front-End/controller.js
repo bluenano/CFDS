@@ -18,11 +18,25 @@ app.directive('ngFiles', ['$parse', function ($parse) {
 //Upload controller content 
 app.controller('uploadCtrl', function($scope, $http) 
 {
+
     var formdata;
     $scope.getTheFiles = function ($files) {
     angular.forEach($files, function (value, key) {
-        formdata = new FormData();
-        formdata.append(key, value);
+        if(value.size > 30000000)
+        {
+            alert("File Too Big");
+            var upload = document.getElementById('upload');
+            upload.innerHTML = '';
+            angular.element(file1).val(null);
+        
+        }
+        else
+        {
+            formdata = new FormData();
+            formdata.append(key, value);
+            var upload = document.getElementById('upload');
+            upload.innerHTML = '<input type="button" value="Upload" />';
+        }
     });
     };
 

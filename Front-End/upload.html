@@ -39,14 +39,13 @@
 <!-- Upload Content-->
 <h3><center>Upload any video</center></h3>
 <br>
-<div class="container" ng-app="myApp" ng-controller="uploadCtrl">
+<div class="container" ng-app="myApp" ng-controller="uploadCtrl"> 
   <div class="col-md-4 col-md-offset-4">
-        <input type="file" id="file1" name="file" multiple
-            ng-files="getTheFiles($files)" />
+        <input type="file" id="file1" name="file" ng-files="getTheFiles($files)" />
     <br>
   </div>
     <div class="col-md-4 col-md-offset-4">
-       <input type="button" ng-click="uploadFiles()" value="Upload" />
+       <div id="upload" ng-click="uploadFiles()"></div>
   </div>
 </div>
 <!-- End of Upload Content-->
