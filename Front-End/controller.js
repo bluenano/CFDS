@@ -18,9 +18,10 @@ app.directive('ngFiles', ['$parse', function ($parse) {
 //Upload controller content 
 app.controller('uploadCtrl', function($scope, $http) 
 {
-    var formdata = new FormData();
+    var formdata;
     $scope.getTheFiles = function ($files) {
     angular.forEach($files, function (value, key) {
+        formdata = new FormData();
         formdata.append(key, value);
     });
     };
