@@ -33,7 +33,7 @@ void add(Result *r, Result const b)
     r->ysum    += b.ysum;
 }
 
-//note, instead of another visible[], this trashes a[] input by setting to black
+//note, instead of another visible[], this trashes a[] input by setting to white
 //simpler(?) for my use case
 //
 //returns number of black points at this coord, and adjacent to it,
@@ -69,9 +69,9 @@ enum {DEF_CUT = 8};//needs to be pretty low for some pictures with big lashes
 //could do something more like track blob x min and max to compute span, and same for y.
 //then see if bounding rect is close to being square, which should be true for pupil, but not for eyelashes
 //
-//as of now just leave this high, it worked for a pretty fat eyelash
+//as of now just leave this low, it worked for a pretty fat eyelash
 
-//note, instead of another visible[], this trashes a[] input by setting to black
+//note, instead of another visible[], this trashes a[] input by setting to white
 //simpler(?) for my use case
 Result LargestBlob(unsigned char *a, int nrows, int w, unsigned char cut)
 {
