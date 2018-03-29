@@ -91,7 +91,6 @@ cv::Point2i detectAndDrawPupilHume(cv::Mat im, cv::Rect face, cv::Rect eye)
     std::vector<cv::Mat> rgbChannels(3);
     cv::split(im, rgbChannels);
     cv::Mat frame_gray = rgbChannels[2];
-    puts("hi");
     cv::Mat grayFaceMat = frame_gray(face);
 
     eye.x -= face.x;
@@ -100,7 +99,7 @@ cv::Point2i detectAndDrawPupilHume(cv::Mat im, cv::Rect face, cv::Rect eye)
     cv::Point const pnt = findEyeCenter(grayFaceMat, eye);//rel to eye rect which is rel to face rect...
 
     cv::Point icare = cv::Point(pnt.x + eye.x + face.x, pnt.y + eye.y + face.y);
-    cv::circle(im, icare, 2, CV_RGB(255, 0, 0), CV_FILLED, CV_AA, 0);
+    cv::circle(im, icare, 4, CV_RGB(255, 255, 255), CV_FILLED, CV_AA, 0);
     //not the best...
     return icare;
 }
@@ -167,12 +166,10 @@ int main(int argc, char **argv)
 
         const lmCoord *const marks = &detRes.part(0);
 
-        drawDelaunay68(im, marks);
-
         auto r = getLeftRoi(im, marks);
         //this allocates alot, pass pre-reserved stuff in?
         detectAndDrawPupilHume(im, dlibRectangleToOpenCV(DLRect), r);
-
+        drawDelaunay68(im, marks);//do after pupil detection
         (void)getPoseAndDraw(im, marks);
 
         #if 0
