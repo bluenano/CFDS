@@ -146,12 +146,12 @@ void testPossibleCentersFormula(int x, int y, const cv::Mat &weight,double gx, d
 }
 
 extern//only one
-cv::Point findEyeCenter(cv::Mat face, cv::Rect eye/*, std::string debugWindow*/) {
-  cv::Mat eyeROIUnscaled = face(eye);
+cv::Point findEyeCenter(const cv::Mat& wgim/*face*/, cv::Rect eye/*, std::string debugWindow*/) {
+  cv::Mat eyeROIUnscaled = wgim(eye);//whole image gray scale
   cv::Mat eyeROI;
   scaleToFastSize(eyeROIUnscaled, eyeROI);
   // draw eye region
-  rectangle(face,eye,1234);
+  //rectangle(face,eye,1234);//(Jonathan): NB
   //-- Find the gradient
   cv::Mat gradientX = computeMatXGradient(eyeROI);
   cv::Mat gradientY = computeMatXGradient(eyeROI.t()).t();

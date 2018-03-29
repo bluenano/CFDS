@@ -1,3 +1,7 @@
+/*
+    XXX:
+*/
+
 #include "../library/pch.h"
 
 //Should we agree on a place to stuff this?
@@ -50,15 +54,6 @@ https://stackoverflow.com/questions/42539240/how-to-get-the-length-of-eyes-and-m
 
 
 */
-
-cv::Point findEyeCenter(cv::Mat face, cv::Rect eye/*, std::string debugWindow*/);
-
-static cv::Rect dlibRectangleToOpenCV(dlib::rectangle r)
-{
-    return cv::Rect(cv::Point2i(r.left(), r.top()), cv::Point2i(r.right() + 1, r.bottom() + 1));
-}
-
-
 typedef dlib::point lmCoord;//lanmark coord
 
 #define ERROR(M) do{puts(M); return -1;}while(0)
@@ -81,28 +76,150 @@ cv::Rect getLeftRoi(cv::Mat im, const lmCoord* a)
 
     cv::Rect const roi = cv::Rect(left - 1, top - 1, width+2, height+2);
     //C++: void rectangle(Mat& img, Rect rec, const Scalar& color, int thickness=1, int lineType=8, int shift=0 )
-    cv::rectangle(im, roi, CV_RGB(0,255,0));
+    cv::rectangle(im, cv::Rect(roi.x-1, roi.y-1, roi.width+2, roi.height+2), CV_RGB(255,255,0));
     return roi;
 }
 
+#ifndef NO_HUME
+extern//Mr Hume
+cv::Point findEyeCenter(const cv::Mat& im/*face*/, cv::Rect eye/*, std::string debugWindow*/);
 
-cv::Point2i detectAndDrawPupilHume(cv::Mat im, cv::Rect face, cv::Rect eye)
+static
+cv::Point detectAndDrawPupilHume(cv::Mat& im, /*cv::Rect face,*/ cv::Rect eye)
 {
+    //Worth todo? pass in scratch mat buf with some kind of reserve() call near start of main,
+    //so to not allocdate every time.
+    //requires more digging into how mat works... and hume makes 50 mats in impl
+    using namespace cv;
+
+    /*
     std::vector<cv::Mat> rgbChannels(3);
     cv::split(im, rgbChannels);
     cv::Mat frame_gray = rgbChannels[2];
-    cv::Mat grayFaceMat = frame_gray(face);
+    */
+    // ^ what is this, should be below?
+
+    #if 0
+    Mat grayFaceMat = static_cast<const Mat&>(im)(face);
+    cvtColor(static_cast<const Mat&>(grayFaceMat), grayFaceMat, CV_BGR2GRAY);
 
     eye.x -= face.x;
     eye.y -= face.y;
+    #else
+    Mat wholeGray;
+    cvtColor(static_cast<const Mat&>(im), wholeGray, CV_BGR2GRAY);
+    #endif
 
-    cv::Point const pnt = findEyeCenter(grayFaceMat, eye);//rel to eye rect which is rel to face rect...
+    cv::Point const pnt = findEyeCenter(static_cast<const Mat&>(wholeGray), eye);//rel to eye rect/*which is rel to face rect...*/
 
-    cv::Point icare = cv::Point(pnt.x + eye.x + face.x, pnt.y + eye.y + face.y);
-    cv::circle(im, icare, 4, CV_RGB(255, 255, 255), CV_FILLED, CV_AA, 0);
+    cv::Point icare = cv::Point(pnt.x + eye.x /*+face.x*/, pnt.y + eye.y /*+face.y*/);
+    cv::circle(im, icare, 3, CV_RGB(255, 255, 0), CV_FILLED, CV_AA, 0);
     //not the best...
     return icare;
 }
+
+/*
+static cv::Rect dlibRectangleToOpenCV(dlib::rectangle r)
+{
+    return cv::Rect(cv::Point2i(r.left(), r.top()), cv::Point2i(r.right() + 1, r.bottom() + 1));
+}
+*/
+#else
+//see comments in bonus/dfs
+struct Result
+{
+    unsigned npoints, xsum, ysum;
+};
+
+inline
+void add(Result *r, Result const b)
+{
+    r->npoints += b.npoints;
+    r->xsum    += b.xsum;
+    r->ysum    += b.ysum;
+}
+
+static
+Result Dfs(unsigned char *a, int nrows, int w, /*unsigned char cut*/int i, int j)
+{
+    enum:unsigned char{cut=16};
+    Result res = {};//zero'd
+
+    if (0<=i && i<nrows && 0<=j && j<w)
+    {
+        unsigned char *const ptr = a + i*w + j;
+        if (*ptr < cut)
+        {
+            *ptr = 255;//got this coord, can pretend white from now on to signal not to visit
+
+            res.npoints++;
+            res.xsum += j;
+            res.ysum += i;
+
+            add(&res, Dfs(a, nrows, w, /*cut,*/ i+1, j));//down
+            add(&res, Dfs(a, nrows, w, /*cut,*/ i-1, j));//up
+            add(&res, Dfs(a, nrows, w, /*cut,*/ i, j+1));//right
+            add(&res, Dfs(a, nrows, w, /*cut,*/ i, j-1));//left
+        }
+    }
+
+    return res;
+}
+
+static
+Result LargestBlob(unsigned char *a, int nrows, int w/*, unsigned char cut*/)
+{
+    enum:unsigned char{cut=16};
+    Result maxres = {};
+
+    for (int i=0; i!=nrows; ++i)
+    {
+        for (int j=0; j!=w; ++j)
+        {
+            if (a[i*w + j] < cut)//if unvisited
+            {
+                Result const cres = Dfs(a, nrows, w, /*cut*/ i, j);
+                if (maxres.npoints < cres.npoints)
+                    maxres = cres;
+            }
+        }
+    }
+
+    return maxres;
+}
+
+static
+cv::Point detectAndDrawPupilGraph(cv::Mat& im, /*I dont need the face*/ cv::Rect eye)
+{
+    //Worth todo? pass in scratch mat buf with some kind of reserve() call near start of main,
+    //so to not allocdate every time.
+    //requires more digging into how mat works...
+    using namespace cv;
+    static const int _= ([](){cv::namedWindow("z"); return 0;})(); (void)_;
+    //its way too pixely.. also pupil was more white than black?
+    Mat eyemat = static_cast<const Mat&>(im)(eye);
+    imshow("z", eyemat);
+    waitKey(0);
+
+    cvtColor(eyemat, eyemat, CV_BGR2GRAY);
+    imshow("z", eyemat);
+    waitKey(0);
+
+    Result const r = LargestBlob((unsigned char *)eyemat.data, eyemat.rows, eyemat.cols);
+    if (r.npoints)
+    {
+        //this rel to cropped eye mat
+        unsigned x = r.xsum/r.npoints, y = r.ysum/r.npoints;
+
+        cv::Point const pnt(x + eye.x, y + eye.y);
+        cv::circle(im, pnt, 2, CV_RGB(255,255,0), CV_FILLED);
+        std::cout << pnt << '\n';
+        return pnt;
+    }
+    else
+        return puts("no eye found"), Point(0,0);//signal error. technically in picture but how could would be there and idk if unsigned
+}
+#endif
 
 // The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
 struct PoseEuler
@@ -167,8 +284,9 @@ int main(int argc, char **argv)
         const lmCoord *const marks = &detRes.part(0);
 
         auto r = getLeftRoi(im, marks);
-        //this allocates alot, pass pre-reserved stuff in?
-        detectAndDrawPupilHume(im, dlibRectangleToOpenCV(DLRect), r);
+        cv::Point leyeCoord = detectAndDrawPupilHume(im, /*dlibRectangleToOpenCV(DLRect),*/ r);
+        (void) leyeCoord;
+        //(void)detectAndDrawPupilGraph(im, /*dlibRectangleToOpenCV(DLRect),*/ r);
         drawDelaunay68(im, marks);//do after pupil detection
         (void)getPoseAndDraw(im, marks);
 
@@ -284,7 +402,7 @@ static PoseEuler getPoseAndDraw(cv::Mat& im, const lmCoord* marks)
 
     projectPoints(nose_end_point3D, rotation_vector, translation_vector, camera_matrix, dist_coeffs, nose_end_point2D);
 
-    cv::line(im, image_points[0], nose_end_point2D[0], cv::Scalar(0,255,0), 2);
+    cv::line(im, image_points[0], nose_end_point2D[0], cv::Scalar(0,0,0), 2);
 
     return PoseEuler{translation_vector, AxisAngle2Euler(rotation_vector)};
 }
