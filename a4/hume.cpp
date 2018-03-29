@@ -44,14 +44,15 @@ const bool kEnableEyeCorner = false;
 #ifndef HELPERS_H
 #define HELPERS_H
 
-bool rectInImage(cv::Rect rect, cv::Mat image);
-bool inMat(cv::Point p,int rows,int cols);
-cv::Mat matrixMagnitude(const cv::Mat &matX, const cv::Mat &matY);
-double computeDynamicThreshold(const cv::Mat &mat, double stdDevFactor);
+//static bool rectInImage(cv::Rect rect, cv::Mat image);
+static bool inMat(cv::Point p,int rows,int cols);
+static cv::Mat matrixMagnitude(const cv::Mat &matX, const cv::Mat &matY);
+static double computeDynamicThreshold(const cv::Mat &mat, double stdDevFactor);
 
 #endif
 
 // Pre-declarations
+static
 cv::Mat floodKillEdges(cv::Mat &mat);
 
 /*
@@ -80,8 +81,9 @@ void plotVecField(const cv::Mat &gradientX, const cv::Mat &gradientY, const cv::
   delete imgData;
 }*/
 
-#//pragma mark Helpers
+//#pragma mark Helpers
 
+static
 cv::Point unscalePoint(cv::Point p, cv::Rect origSize) {
   float ratio = (((float)kFastEyeWidth)/origSize.width);
   int x = round(p.x / ratio);
@@ -89,10 +91,12 @@ cv::Point unscalePoint(cv::Point p, cv::Rect origSize) {
   return cv::Point(x,y);
 }
 
+static
 void scaleToFastSize(const cv::Mat &src,cv::Mat &dst) {
   cv::resize(src, dst, cv::Size(kFastEyeWidth,(((float)kFastEyeWidth)/src.cols) * src.rows));
 }
 
+static
 cv::Mat computeMatXGradient(const cv::Mat &mat) {
   cv::Mat out(mat.rows,mat.cols,CV_64F);
 
@@ -110,8 +114,9 @@ cv::Mat computeMatXGradient(const cv::Mat &mat) {
   return out;
 }
 
-#//pragma mark Main Algorithm
+//#pragma mark Main Algorithm
 
+static
 void testPossibleCentersFormula(int x, int y, const cv::Mat &weight,double gx, double gy, cv::Mat &out) {
   // for all possible centers
   for (int cy = 0; cy < out.rows; ++cy) {
@@ -140,6 +145,7 @@ void testPossibleCentersFormula(int x, int y, const cv::Mat &weight,double gx, d
   }
 }
 
+extern//only one
 cv::Point findEyeCenter(cv::Mat face, cv::Rect eye/*, std::string debugWindow*/) {
   cv::Mat eyeROIUnscaled = face(eye);
   cv::Mat eyeROI;
@@ -230,13 +236,15 @@ cv::Point findEyeCenter(cv::Mat face, cv::Rect eye/*, std::string debugWindow*/)
   return unscalePoint(maxP,eye);
 }
 
-#//pragma mark Postprocessing
+//#pragma mark Postprocessing
 
+static
 bool floodShouldPushPoint(const cv::Point &np, const cv::Mat &mat) {
   return inMat(np, mat.rows, mat.cols);
 }
 
 // returns a mask
+static
 cv::Mat floodKillEdges(cv::Mat &mat) {
   rectangle(mat,cv::Rect(0,0,mat.cols,mat.rows),255);
 
@@ -268,15 +276,20 @@ cv::Mat floodKillEdges(cv::Mat &mat) {
 
 //helpers.cpp:
 
+/*
+static
 bool rectInImage(cv::Rect rect, cv::Mat image) {
   return rect.x > 0 && rect.y > 0 && rect.x+rect.width < image.cols &&
   rect.y+rect.height < image.rows;
 }
+*/
 
+static
 bool inMat(cv::Point p,int rows,int cols) {
   return p.x >= 0 && p.x < cols && p.y >= 0 && p.y < rows;
 }
 
+static
 cv::Mat matrixMagnitude(const cv::Mat &matX, const cv::Mat &matY) {
   cv::Mat mags(matX.rows,matX.cols,CV_64F);
   for (int y = 0; y < matX.rows; ++y) {
@@ -291,6 +304,7 @@ cv::Mat matrixMagnitude(const cv::Mat &matX, const cv::Mat &matY) {
   return mags;
 }
 
+static
 double computeDynamicThreshold(const cv::Mat &mat, double stdDevFactor) {
   cv::Scalar stdMagnGrad, meanMagnGrad;
   cv::meanStdDev(mat, meanMagnGrad, stdMagnGrad);
