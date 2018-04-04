@@ -15,11 +15,15 @@ cmd = ['/usr/bin/ffprobe', '-v', 'quiet', '-count_frames', '-select_streams', 'v
 
 width, height, frame_rate, frame_count = subprocess.check_output(cmd, universal_newlines=True).split(',')
 
+currenttime = datetime.now()
+
 conn = psycopg2.connect(host='localhost', dbname='DB', user='USER', password='PASS')
 cur = conn.cursor()
-sql = '''INSERT INTO video (frame_count, frame_rate, width, height)
-    VALUES (%s, %s, %s, %s) RETURNING video_id;'''
-arg = frame_count, frame_rate, width, height
+
+sql = '''INSERT INTO Video (UserID, NumFrames, FramesPerSecond, Width, Height)
+    VALUES (%s, %s, %s, %s, %s) RETURNING VideoID;'''
+arg = user_id, frame_count, frame_rate, width, height
+
 cur.execute(sql, arg)
 video_id = str(cur.fetchone()[0])
 conn.commit()

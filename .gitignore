@@ -38,6 +38,4 @@
 
 ignore/
 bin/
-
-
-
+.vscode/
