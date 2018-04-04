@@ -6,7 +6,7 @@ database.
 Then in psql, run \i path_to_setup.sql 
 */
 
-CREATE TABLE IF NOT EXISTS UserInfo (
+CREATE TABLE IF NOT EXISTS userinfo (
     UserID SERIAL PRIMARY KEY,
     Username VARCHAR(255),
     Password CHAR(60),
@@ -25,7 +25,7 @@ The horizontal (X) and vertical (Y) pixel resolution of the video.
 A unique ID (primary key) for this video  
 The login username (i.e. registered user) of the person who uploaded this video.
 */
-CREATE TABLE IF NOT EXISTS Video (
+CREATE TABLE IF NOT EXISTS video (
     VideoID SERIAL PRIMARY KEY,
     UserID SERIAL REFERENCES UserInfo(UserID),
     NumFrames INT, 
@@ -41,7 +41,7 @@ acquired from OpenFace and Fabian Timm's algorithm (4 points total).
 although the assignments do not specify using OpenFace to get these 
 points so we will only store points from FT's algorithm
 */
-CREATE TABLE IF NOT EXISTS Frame (
+CREATE TABLE IF NOT EXISTS frame (
     VideoID SERIAL REFERENCES Video(VideoID),
     FTPupilRightX REAL,
     FTPupilRightY REAL,
@@ -58,7 +58,7 @@ it is and the FrameID associated with that point.
 recall that open face will return 68 points if a face
 is found in an image 
 */
-CREATE TABLE IF NOT EXISTS OpenFaceData (
+CREATE TABLE IF NOT EXISTS openfacedata (
     X REAL,
     Y REAL,
     VideoID SERIAL REFERENCES Video(VideoID)
