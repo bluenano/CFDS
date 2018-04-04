@@ -11,13 +11,11 @@ function exit_script_on_failure() {
     echo 0;
     exit;
 }
-
 ?>
 
-<?php
-// need to implement further error handling
 
-include("database_handler.php");
+<?php
+include('database_handler.php');
 
 if (!isset($_POST['username']) 
     ||
@@ -27,6 +25,7 @@ if (!isset($_POST['username'])
 
 date_default_timezone_set("America/Los_Angeles");
 
+
 $conn = connect();
 if (is_null($conn)) {
     echo 'Failed to connect to database' . "\n";
@@ -35,23 +34,35 @@ if (is_null($conn)) {
 
 $username = $_POST['username'];
 $password = $_POST['password'];
- 
-
 if (!(verify_login($conn, $username, $password))) {
+    echo "Failed to login\n";
     exit_script_on_failure();
 }
 
-// could store the id from the db to pass to other php scripts
-$_SESSION['username'] = $username;
 
-$session = insert_session_id($conn, $username);
+$_SESSION['id'] = query_user_id($conn, $username);
+if (is_null($_SESSION['id'])) {
+    echo "Failed to set user id\n";
+    exit_script_on_failure();
+}
+
+
+$session = create_session_id($conn, $_SESSION['id']);
+if (!$session) {
+    echo "Failed to create a session id\n";
+    exit_script_on_failure();
+}
+
+
 $ip = $_SERVER['REMOTE_ADDR'];
 $time = date('Y-m-d H:i:s');
-update_after_login($conn, $username, $ip, $time);
+if (!update_after_login($conn, $_SESSION['id'], $ip, $time)) {
+    echo "Failed to update database after login\n";
+    exit_script_on_failure();
+}
 
 
-// echo the session back to client
 // if client receives a session, then login was successful
-// load user account page
+// load user account page from here
 echo $session;   
 ?>

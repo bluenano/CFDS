@@ -1,28 +1,28 @@
 <!DOCTYPE html>
 <html data-ng-app="">
 <head>
-	<title>Computer Face Detection System</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<!-- Latest compiled and minified CSS -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-	<!-- jQuery library -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<!-- Latest compiled JavaScript -->
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<!-- Local CSS file -->
-	<link rel="stylesheet" type="text/css" href="stylez.css">
-	<!-- AngularJS-->
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+  <title>Computer Face Detection System</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <!-- jQuery library -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <!-- Local CSS file -->
+  <link rel="stylesheet" type="text/css" href="stylez.css">
+  <!-- AngularJS-->
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
 
 </head>
 <body>
 
-	<nav class="navbar navbar-default">
-  		<div class="container-fluid">
-   		 <div class="navbar-header">
-      		<a class="navbar-brand">Computer Face Detection System</a>
-    	</div>
+  <nav class="navbar navbar-default">
+      <div class="container-fluid">
+       <div class="navbar-header">
+          <a class="navbar-brand">Computer Face Detection System</a>
+      </div>
     <ul class="nav navbar-nav">
       <li><a href="#">Home</a></li>
       <li class="active"><a>Upload</a></li>
@@ -33,20 +33,19 @@
       <li><a href="#"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
       <li><a></a></li>
     </ul>
-  		</div>
-	</nav>
+      </div>
+  </nav>
 
 <!-- Upload Content-->
 <h3><center>Upload any video</center></h3>
 <br>
-<div class="container" ng-app="myApp" ng-controller="uploadCtrl">
+<div class="container" ng-app="myApp" ng-controller="uploadCtrl"> 
   <div class="col-md-4 col-md-offset-4">
-    <input type="file" file-model="myFile" />
+        <input type="file" id="file1" name="file" ng-files="getTheFiles($files)" />
     <br>
   </div>
     <div class="col-md-4 col-md-offset-4">
-
-    <button class="btn btn-info" ng-click="uploadFile()">Upload</button>
+       <div id="upload" ng-click="uploadFiles()"></div>
   </div>
 </div>
 <!-- End of Upload Content-->
