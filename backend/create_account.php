@@ -1,18 +1,18 @@
 <?php
-function exit_script_on_failure() {
-    echo 0;
+function exit_script_on_failure($error) {
+    echo json_encode($error);
     exit;
 }
 ?>
 
 <?php
-include("database_handler.php");
+include('database_handler.php');
 
 
 if (!isset($_POST['username'])
     ||
     !isset($_POST['password'])) {
-    exit_script_on_failure();
+    exit_script_on_failure('POST_FAILURE');
 }
 
 
@@ -24,21 +24,15 @@ $lastname = isset($_POST['lastname']) ? $_POST['lastname'] : null;
 
 $conn = connect();
 if (is_null($conn)) {
-    echo "Failed to connect to database\n";
-    exit_script_on_failure();
+    exit_script_on_failure('CONNECTION_FAILURE');
 }
 
 
 if (!create_new_user($conn, $username, $password, $firstname, $lastname)) {
-    echo "Failed to create a new user. Username may be taken.\n";
-    exit_script_on_failure();
+    exit_script_on_failure('USER_FAILURE');
 }
 
-echo "Successfully created a new user.\n";
-
-// fields are username, email, firstname, lastname, password
-// I am not going to handle the email because we do not
-// have a field for it in our database
+echo json_encode('SUCCESS');
 
 
 ?>
