@@ -45,14 +45,15 @@ points so we will only store points from FT's algorithm
 CREATE TABLE IF NOT EXISTS frame (
     videoid SERIAL REFERENCES video(videoid),
     framenumber INT,
-    ftpupilrightx REAL,
-    ftpupilrighty REAL,
-    ftpupilleftx REAL,
-    ftpupillefty REAL,
+    ftpupilrightx INT,
+    ftpupilrighty INT,
+    ftpupilleftx INT,
+    ftpupillefty INT,
     roll REAL,
     pitch REAL,
     yaw REAL
 );
+
 
 /*
 the key for open face data should be which point
@@ -62,7 +63,7 @@ is found in an image
 */
 CREATE TABLE IF NOT EXISTS openfacedata (
     pointnumber INT,
-    x REAL,
-    y REAL,
+    x INT,
+    y INT,
     framenumber INT REFERENCES frame(framenumber)
 );
