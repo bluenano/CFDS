@@ -64,5 +64,5 @@ CREATE TABLE IF NOT EXISTS openfacedata (
     pointnumber INT,
     x REAL,
     y REAL,
-    videoid SERIAL REFERENCES video(videoid)
+    framenumber INT REFERENCES frame(framenumber)
 );
