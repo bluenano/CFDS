@@ -6,6 +6,7 @@ database.
 Then in psql, run \i path_to_setup.sql 
 */
 
+
 CREATE TABLE IF NOT EXISTS userinfo (
     userid SERIAL PRIMARY KEY,
     username VARCHAR(255),
@@ -43,6 +44,7 @@ although the assignments do not specify using OpenFace to get these
 points so we will only store points from FT's algorithm
 */
 CREATE TABLE IF NOT EXISTS frame (
+    frameid SERIAL PRIMARY KEY,
     videoid SERIAL REFERENCES video(videoid),
     framenumber INT,
     ftpupilrightx INT,
@@ -65,5 +67,5 @@ CREATE TABLE IF NOT EXISTS openfacedata (
     pointnumber INT,
     x INT,
     y INT,
-    framenumber INT REFERENCES frame(framenumber)
+    framenumber INT REFERENCES frame(frameid)
 );
