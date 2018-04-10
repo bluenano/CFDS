@@ -21,7 +21,6 @@ function connect($file = 'database.ini') {
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         return $conn;
     } catch (PDOException $e) {
-        echo "Failed to connect to database\n";
         return null;
     }
 }
@@ -46,7 +45,6 @@ function create_new_user($conn, $username, $password, $firstname, $lastname) {
                           : $stmt->bindValue(':lastname', null, PDO::PARAM_NULL);
         return $stmt->execute();
     } catch (PDOException $e) {
-        echo "Database access failure\n";
         return FALSE;
     }
 }
@@ -68,10 +66,8 @@ function create_session_id($conn, $id, $length = 32) {
         $encoded = urlencode($hashed);
         return $encoded;
     } catch (PDOException $e) {
-        echo "Database access failure\n";
         return FALSE;
     } catch (Exception $e) {
-        echo "Random number generator failure\n";
         return FALSE;
     }
 }
@@ -85,7 +81,6 @@ function update_after_login($conn, $id, $ip, $login) {
         $stmt->bindParam(':login', $login, PDO::PARAM_STR);
         return $stmt->execute();
     } catch (PDOException $e) {
-        echo "Database access failure\n";
         return FALSE;
     }
 }
@@ -131,7 +126,6 @@ function query_username($conn, $id) {
         $row = $stmt->fetch();
         return (isset($row['username'])) ? $row['username'] : null; 
     } catch (PDOException $e) {
-        echo "Database Access Failure\n";
         return null;
     }
 }
@@ -145,7 +139,6 @@ function query_password($conn, $id) {
         $row = $stmt->fetch();
         return (isset($row['password'])) ? $row['password'] : null; 
     } catch (PODException $e) {
-        echo "Database Access Failure\n";
         return null;
     }
 }
@@ -159,7 +152,6 @@ function query_session_id($conn, $id) {
         $row = $stmt->fetch();
         return (isset($row['sessionid'])) ? $row['sessionid'] : null; 
     } catch (PDOException $e) {
-        echo "Database access failure\n";
         return null;
     }
 }
@@ -173,7 +165,19 @@ function query_user_id($conn, $username) {
         $row = $stmt->fetch();
         return (isset($row['userid'])) ? $row['userid'] : null;    
     } catch (PDOException $e) {
-        echo "Database Access Failure\n";
+        return null;
+    }
+}
+
+
+function query_videopaths($conn, $id) {
+    try {
+        $stmt = $conn->prepare('SELECT videopath FROM video WHERE userid = :id');
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $all_rows = $stmt->fetchAll();
+        return (isset($all_rows)) ? $all_rows : null;
+    } catch (PDOException $e) {
         return null;
     }
 }
@@ -186,7 +190,6 @@ function is_unique_name($conn, $username) {
         $row = $stmt->fetch();
         return is_null($row[0]);        
     } catch (PDOException $e) {
-        echo "Database Access Failure\n";
         return FALSE;
     }
 } 
@@ -199,7 +202,6 @@ function is_unique_session($conn, $session) {
         $row = $stmt->fetch();
         return is_null($row[0]);
     } catch (PDOException $e) {
-        echo "Database Access Failure\n";
         return FALSE;
     }
 }
@@ -212,11 +214,24 @@ function insert_session($conn, $id, $session) {
         $stmt->bindParam('session', $session, PDO::PARAM_STR);
         return $stmt->execute();
     } catch (PDOException $e) {
-        echo "Database Access Failure\n";
         return FALSE;
     }
 }
 
+
+/*
+// may not need this function
+function insert_video($conn, $id, $video_path) {
+    try {
+        $stmt = $conn->prepare('INSERT INTO video (userid, videopath) VALUES (:id, :videopath)');
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':videopath', $video_path, PDO::PARAM_STR);
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        return FALSE;
+    }
+}
+*/
 
 function generate_random_string($length = 32) {
     $result = "";

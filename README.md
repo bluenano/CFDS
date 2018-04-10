@@ -1,5 +1,4 @@
-# CS160Project
-CS160 Project Computer Vision Pipeline
+# Computer Face Detection System
 Team 404
 
 There is a file in our google drive folder that describes tasks for our project.
