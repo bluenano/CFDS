@@ -67,5 +67,5 @@ CREATE TABLE IF NOT EXISTS openfacedata (
     pointnumber INT,
     x INT,
     y INT,
-    framenumber INT REFERENCES frame(frameid)
+    frameid INT REFERENCES frame(frameid)
 );
