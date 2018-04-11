@@ -1,11 +1,56 @@
-#ifndef CAP
+//this is just an example of what another process(in a diff langauge) could do with the data
+//probably better to figure out whatever is needed to do and add it into the video processing cpp src.
+
+//nvm... this is bogus, ndata <=0...
+
+#include "header.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+    //hard coded...
+    FILE* const fpin = popen("./vprocess.out contour.mp4", "r");
+    if (!fpin) {perror("popen()"); return -1; }
+
+    VideoMetadata meta={};
+    fread(&meta, sizeof(VideoMetadata), 1, fpin);
+
+    if (meta.nframes <= 0)
+        {perror("bad nframes"); return -1; }//free fp
+
+
+    FrameResults *const res = (FrameResults *) malloc(meta.nframes * sizeof(FrameResults));
+
+    fread(res, sizeof(FrameResults), meta.nframes, fpin);
+
+    printf("nframes: %d\n"
+           "fps: %d\n"
+           "width: %d\n"
+           "height: %d\n", meta.nframes, meta.fps, meta.width, meta.height);
+
+
+
+    puts("The 68 points for frame[0] are:");
+    for (int i=0; i!=68; ++i)
+        printf("{%u,%u}", res[0].marks68[i].x(), res[0].marks68[i].y());
+
+    //os does this
+    free(res);
+    pclose(fpin);
+    return 0;
+}
+
+
+#if 0
 
 /*
     Tested on
-    opencv 3.3 built with ffmpeg/libav
+    opencv 3.3 built with ???
     linux mint 18.3
 
-    Seems to work with .mp4 and .webm
+    Seems to work with .mp4 and .webm<-reading only
 */
 
 /*
@@ -59,4 +104,4 @@ int main(int argc, char** argv)
 
     return 0;
 }
-#endif // CAP
+#endif
