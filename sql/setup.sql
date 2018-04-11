@@ -6,15 +6,16 @@ database.
 Then in psql, run \i path_to_setup.sql 
 */
 
-CREATE TABLE IF NOT EXISTS UserInfo (
-    UserID SERIAL PRIMARY KEY,
-    Username VARCHAR(255),
-    Password CHAR(60),
-    FirstName VARCHAR(255),
-    LastName VARCHAR(255),
-    LastIp VARCHAR(16),
-    LastLogin TIMESTAMP,
-    SessionID CHAR(32)
+
+CREATE TABLE IF NOT EXISTS userinfo (
+    userid SERIAL PRIMARY KEY,
+    username VARCHAR(255),
+    password CHAR(60),
+    firstname VARCHAR(255),
+    lastname VARCHAR(255),
+    lastip VARCHAR(16),
+    lastlogin TIMESTAMP,
+    sessionid CHAR(32)
 );
 
 /*
@@ -25,13 +26,14 @@ The horizontal (X) and vertical (Y) pixel resolution of the video.
 A unique ID (primary key) for this video  
 The login username (i.e. registered user) of the person who uploaded this video.
 */
-CREATE TABLE IF NOT EXISTS Video (
-    VideoID SERIAL PRIMARY KEY,
-    UserID SERIAL REFERENCES UserInfo(UserID),
-    NumFrames INT, 
-    FramesPerSecond INT, 
-    Width INT,
-    Height INT
+CREATE TABLE IF NOT EXISTS video (
+    videoid SERIAL PRIMARY KEY,
+    userid SERIAL REFERENCES userinfo(userid),
+    numframes INT, 
+    framespersecond INT, 
+    width INT,
+    height INT,
+    videopath VARCHAR(255)
 );
 
 
@@ -41,16 +43,19 @@ acquired from OpenFace and Fabian Timm's algorithm (4 points total).
 although the assignments do not specify using OpenFace to get these 
 points so we will only store points from FT's algorithm
 */
-CREATE TABLE IF NOT EXISTS Frame (
-    VideoID SERIAL REFERENCES Video(VideoID),
-    FTPupilRightX REAL,
-    FTPupilRightY REAL,
-    FTPupilLeftX REAL,
-    FTPupilLeftY REAL,
-    Roll REAL,
-    Pitch REAL,
-    Yaw REAL
+CREATE TABLE IF NOT EXISTS frame (
+    frameid SERIAL PRIMARY KEY,
+    videoid SERIAL REFERENCES video(videoid),
+    framenumber INT,
+    ftpupilrightx INT,
+    ftpupilrighty INT,
+    ftpupilleftx INT,
+    ftpupillefty INT,
+    roll REAL,
+    pitch REAL,
+    yaw REAL
 );
+
 
 /*
 the key for open face data should be which point
@@ -58,8 +63,9 @@ it is and the FrameID associated with that point.
 recall that open face will return 68 points if a face
 is found in an image 
 */
-CREATE TABLE IF NOT EXISTS OpenFaceData (
-    X REAL,
-    Y REAL,
-    VideoID SERIAL REFERENCES Video(VideoID)
+CREATE TABLE IF NOT EXISTS openfacedata (
+    pointnumber INT,
+    x INT,
+    y INT,
+    frameid INT REFERENCES frame(frameid)
 );
