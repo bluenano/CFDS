@@ -1,38 +1,14 @@
 <?php
+
 // security checks
 // check that the file is not empty
 // check that file name is in english characters, numbers, and _-. symbols
 // check that the file name is not larger than 250 characters
 // check that the extension is supported
 
-include_once '../shared/utilities.php';
 include_once '../config/database.php';
+include_once '../shared/utilities.php';
 
-define ('FORMATS', array('mp4', 'avi', 'mov'));
-define ('SITE_ROOT', realpath(dirname(__FILE__)));
-
-function check_filename($filename) {
-	return (bool) ((preg_match("'[^-0-9A-Za-z_\.]+'", $filename)) ? FALSE : TRUE);
-}
-
-
-function check_filename_length($filename) {
-	return (bool) ((mb_strlen($filename, 'UTF-8')) > 255 ? FALSE : TRUE); 
-}
-
-
-function check_extension($ext) {
-	return (bool) ((!in_array($ext, FORMATS)) ? FALSE : TRUE);
-}
-
-function exit_script_on_failure($error) {
-	echo json_encode(array('message' => $error));
-	exit;
-}
-?>
-
-
-<?php
 
 if ($_FILES[0]['error'] != UPLOAD_ERR_OK) {
 	exit_script_on_failure('UPLOAD_ERROR');

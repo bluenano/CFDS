@@ -1,18 +1,10 @@
 <?php
+
 session_start();
+
+include_once '../config/database.php';
 include_once '../shared/utilities.php';
 
-function end_session_and_exit($message) {
-    session_unset();
-    session_destroy();
-    exit_script_on_failure($message);
-}
-
-?>
-
-
-<?php
-include_once '../config/database.php';
 
 if (!isset($_POST['username']) 
     ||
