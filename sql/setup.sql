@@ -29,6 +29,8 @@ The login username (i.e. registered user) of the person who uploaded this video.
 CREATE TABLE IF NOT EXISTS video (
     videoid SERIAL PRIMARY KEY,
     userid SERIAL REFERENCES userinfo(userid),
+    title VARCHAR(255),
+    uploaddate DATE,
     numframes INT, 
     framespersecond INT, 
     width INT,

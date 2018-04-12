@@ -1,10 +1,12 @@
 <?php
-
 // security checks
 // check that the file is not empty
 // check that file name is in english characters, numbers, and _-. symbols
 // check that the file name is not larger than 250 characters
 // check that the extension is supported
+
+include_once '../shared/utilities.php';
+include_once '../config/database.php';
 
 define ('FORMATS', array('mp4', 'avi', 'mov'));
 define ('SITE_ROOT', realpath(dirname(__FILE__)));
@@ -24,14 +26,13 @@ function check_extension($ext) {
 }
 
 function exit_script_on_failure($error) {
-	echo json_encode($error);
+	echo json_encode(array('message' => $error));
 	exit;
 }
 ?>
 
 
 <?php
-include('database_handler.php');
 
 if ($_FILES[0]['error'] != UPLOAD_ERR_OK) {
 	exit_script_on_failure('UPLOAD_ERROR');
@@ -65,7 +66,7 @@ if (!move_uploaded_file($tmp_name, $uploads_file)) {
     exit_script_on_failure('UPLOAD_ERROR');
 } 
 
-echo json_encode('SUCCESS');
+echo json_encode(array('message' => 'SUCCESS'));
 // this code may be redundant depending on our implementation
 // will the php script insert the video or will eric's 
 // python script insert the video?

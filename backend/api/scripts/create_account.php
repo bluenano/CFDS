@@ -1,13 +1,6 @@
 <?php
-function exit_script_on_failure($error) {
-    echo json_encode($error);
-    exit;
-}
-?>
-
-<?php
-include('database_handler.php');
-
+include_once '../config/database.php';
+include_once '../shared/utilities.php';
 
 if (!isset($_POST['username'])
     ||
@@ -32,7 +25,7 @@ if (!create_new_user($conn, $username, $password, $firstname, $lastname)) {
     exit_script_on_failure('USER_FAILURE');
 }
 
-echo json_encode('SUCCESS');
+echo json_encode(array('message' => 'SUCCESS'));
 
 
 ?>
