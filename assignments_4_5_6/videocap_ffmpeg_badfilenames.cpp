@@ -1,49 +1,17 @@
 /*
-    VideoCapture and VideoWriter tested on
-    Linux Mint 18.3
-    OpenCV 3.3, built with:
-
-    sudo apt-get -y install libopencv-dev build-essential
-    cmake git libgtk2.0-dev pkg-config python-dev python-numpy
-    libdc1394-22 libdc1394-22-dev libjpeg-dev libpng12-dev libjasper-dev
-    libavcodec-dev libavformat-dev libswscale-dev libgstreamer0.10-dev
-    libgstreamer-plugins-base0.10-dev libv4l-dev libtbb-dev libqt4-dev libfaac-dev libmp3lame-dev
-    libopencore-amrnb-dev libopencore-amrwb-dev libtheora-dev libvorbis-dev libxvidcore-dev x264 v4l-utils unzip
-
-    Followed guide: http://www.techgazet.com/install-opencv/
-*/
-
-
-/*              WHAT THIS DOES:
-
-    Takes 1 command line arg, the video file's (absolute) name.
-    Outputs the RELATIVE name prefixed with "out_" to the current directory.
-    Say this executable is /home/jw/Data/vprocess.out
-    Then:
-        jw@jw-laptop ~/Data $ ./vprocess.out $ /home/jw/a/b/c/Good/contour.mp4
-    Will produce a file:
-        ~/Data/out_contour.mp4
-
-    Also, if stdout is redirected and isatty is false, then
-    will dump the video metadata and frame info as binary data.
-    See pipetest.cpp for an example of using this.
-
-
-    The video reading and writing works with both .mp4 and .webm,
-    but writing does not work for .webm.
-
-    So, If we care about this: either go back to writing a whole lot of images to a directory and
-    spawning ffmpeg to combine them. Or could
-
-
     By left pupil, do we mean the recorded person's actual left?
     As of now it is done the other way.
 
+    XXX:
+    build notes.
 
     Make this a php or python callable library?
     Shared lib?
     Daemon process (so initialization done once per system start),
     and communicate via ipc, like AF_UNIX udp example?
+
+    For the brave: try to wrangle libav or OpenCV VideoCapture,
+    instead of spawning ffmpeg processes and doing a lot of io.
 
     Possible optimization:
         The bounding face ROI detection is actually much slower than the subsequent
@@ -110,11 +78,11 @@ https://stackoverflow.com/questions/42539240/how-to-get-the-length-of-eyes-and-m
     4: Some kind of interprocess communication/have another language do something.
     5: Other.
 */
-inline//STUB
-int DoSomethingWithResults(const FrameResults& r)
+static//STUB
+int DoSomethingWithResults(const FrameResults& r, FILE *const outfp)
 {
-    (void)r;
-    return 0;
+    (void)r, (void)outfp;
+    return 0;//fwrite(&r, sizeof(FrameResults), 1, outfp);
 }
 
 //TODO? gut and in more familiar fmt
@@ -216,11 +184,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "usage: %s <video-file>\n", argv[0]);
         return -1;
     }
-    const char *const vfilename = argv[1];
-    cv::VideoCapture vcap(vfilename);
+
+    cv::VideoCapture vcap(argv[1]);
     if (!vcap.isOpened())
     {
-        fprintf(stderr, "failed to capture video [%s]\n", vfilename);
+        fprintf(stderr, "failed to capture video [%s]\n", argv[1]);
         return -1;
     }
 
@@ -231,27 +199,6 @@ int main(int argc, char **argv)
     vdata.width   = vcap.get(CV_CAP_PROP_FRAME_WIDTH);
     vdata.height  = vcap.get(CV_CAP_PROP_FRAME_HEIGHT);
     int lastframeno = vdata.nframes;
-
-    const int bDumpData = isatty(1);
-    if (bDumpData)
-        fwrite(&vdata, sizeof(vdata), 1, stdout);
-
-    //Should the output be the same codec as given? Thats what it does now.
-    //or mp4 each time?
-    const char * slash = strrchr(vfilename, '/');//reverse
-    cv::String voutname("out_");
-    voutname += (slash==nullptr ? vfilename : slash+1);
-    fprintf(stderr, "%s\n", voutname.c_str());
-
-    cv::VideoWriter vwriter(voutname,
-                            vcap.get(CV_CAP_PROP_FOURCC),
-                            vdata.fps,
-                            cv::Size(vdata.width, vdata.height));
-    if (!vwriter.isOpened())
-    {
-        fprintf(stderr, "failed create video capture\n");
-        return -1;
-    }
 
     enum{BufCap=512, BufStop=BufCap-65};//for many digits and '\0' term shenanigans
     char buf[BufCap];
@@ -274,7 +221,7 @@ int main(int argc, char **argv)
         return -1;
 
     cv::Mat im;
-    FrameResults all={};
+    FrameResults all;
 
     fputs("entering read/process loop\n", stderr);
 
@@ -289,9 +236,6 @@ int main(int argc, char **argv)
             fprintf(stderr, "failed to extract frame %d\n", i-1);
             --lastframeno;
             --i;//then gets inc'd back to same in continue. reuse
-            all.marks68[0] = {-1,-1};
-            if (bDumpData)//because the header that is written first will have the original number...
-                fwrite(&all, sizeof(all), 1, stdout);
             continue;
         }
 
@@ -350,15 +294,46 @@ int main(int argc, char **argv)
                 all.right_pupil = {int16_t(rightEyeCoord.x), int16_t(rightEyeCoord.y)};
             } else
                 all.right_pupil = {-1,-1};
-        }//end if have 68 points
 
-        vwriter.write(im);
-        //DoSomethingWithResults(all, nullptr);
-        if (bDumpData)
-            fwrite(&all, sizeof(all), 1, stdout);
+        }//end if have 68 points
+            #if defined(DO_EXEC)
+            pmsd[-1] = 'z';//temp overwrite '.' so make new img
+            cv::imwrite(buf, im);
+            pmsd[-1] = '.';
+            #else
+            static int xxx = 0;
+            cv::String const WinName = "w";
+            if (xxx++ == 0)
+                cv::namedWindow(WinName);
+            cv::imshow(WinName, im);
+            cv::waitKey(1000);
+            #endif
+        DoSomethingWithResults(all, nullptr);
     }//for each frame
 
-    return 0;
+
+    //this is balls but apparently I cant find a goddam c/c++ function I can just call
+    #ifdef DO_EXEC
+    char buf2[512];
+    pmsd[-1]='\0';
+    sprintf(buf2, "%s.out.mp4", buf);
+
+    pmsd[-1]='z';
+    strcpy(pmsd, "%d.png");
+    //ffmpeg -r 18 -i 9z%d.png -c:v libx264 output0.mp4
+
+    char szFps[10];
+    sprintf(szFps, "%u", (unsigned short) vdata.fps);
+
+    //ffmpeg wants all spaces
+    //just issue this instead of fork() or system() because this process has nothing useful left to do.
+    execl("/usr/bin/ffmpeg",
+        "ffmpeg", "-r", szFps, "-i", buf, "-c:v", "libx264", buf2,
+        (char *) NULL);
+
+    perror("execl");
+    return -1;
+    #endif
 }
 //location of all 68 points are known relative to each other, could draw directly
 void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks)
@@ -494,70 +469,3 @@ EulerAnglesF32 AxisAngle2Euler(const cv::Vec3d& axis_angle)
     //return RotationMatrix2Euler(rotation_matrix);//openface version
     return rotationMatrixToEulerAngles(rotation_matrix);//learn opencv version
 }
-
-/*
-OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
-OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
-OpenCV Error: Unspecified error (GStreamer: cannot link elements
-) in CvVideoWriter_GStreamer::open, file /home/jw/opencv/opencv-3.3.0/modules/videoio/src/cap_gstreamer.cpp, line 1626
-VIDEOIO(cvCreateVideoWriter_GStreamer (filename, fourcc, fps, frameSize, is_color)): raised OpenCV exception:
-
-/home/jw/opencv/opencv-3.3.0/modules/videoio/src/cap_gstreamer.cpp:1626: error: (-2) GStreamer: cannot link elements
- in function CvVideoWriter_GStreamer::open
-
-
-
-OpenCV: FFMPEG: tag 0x00000000/'????' is not supported with codec id 14 and format 'webm / WebM'
-OpenCV Error: Unspecified error (GStreamer: cannot link elements
-) in CvVideoWriter_GStreamer::open, file /home/jw/opencv/opencv-3.3.0/modules/videoio/src/cap_gstreamer.cpp, line 1626
-VIDEOIO(cvCreateVideoWriter_GStreamer (filename, fourcc, fps, frameSize, is_color)): raised OpenCV exception:
-
-/home/jw/opencv/opencv-3.3.0/modules/videoio/src/cap_gstreamer.cpp:1626: error: (-2) GStreamer: cannot link elements
- in function CvVideoWriter_GStreamer::open
-
-failed create video capture
-
-
-#can get success for mp4:
-
-
-jw@jw-laptop ~/CS160Project/assignments_4_5_6/bin/release $ ./a4 /home/jw/Data/Good/contour.mp4
-out_contour.mp4
-OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
-OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
-entering read/process loop
-jw@jw-laptop ~/CS160Project/assignments_4_5_6/bin/release $ ./a4 /home/jw/Data/Good/contour.webm
-out_contour.webm
-OpenCV: FFMPEG: tag 0x00000000/'????' is not supported with codec id 14 and format 'webm / WebM'
-[webm @ 0x18b95e0] Only VP8 or VP9 video and Vorbis or Opus audio and WebVTT subtitles are supported for WebM.
-OpenCV Error: Unspecified error (GStreamer: cannot link elements
-) in CvVideoWriter_GStreamer::open, file /home/jw/opencv/opencv-3.3.0/modules/videoio/src/cap_gstreamer.cpp, line 1626
-VIDEOIO(cvCreateVideoWriter_GStreamer (filename, fourcc, fps, frameSize, is_color)): raised OpenCV exception:
-
-/home/jw/opencv/opencv-3.3.0/modules/videoio/src/cap_gstreamer.cpp:1626: error: (-2) GStreamer: cannot link elements
- in function CvVideoWriter_GStreamer::open
-
-failed create video capture
-*/
-
-    #if defined(DO_EXEC) && 0
-    char buf2[512];
-    pmsd[-1]='\0';
-    sprintf(buf2, "%s.out.mp4", buf);
-
-    pmsd[-1]='z';
-    strcpy(pmsd, "%d.png");
-    //ffmpeg -r 18 -i 9z%d.png -c:v libx264 output0.mp4
-
-    char szFps[10];
-    sprintf(szFps, "%u", (unsigned short) vdata.fps);
-
-    //ffmpeg wants all spaces
-    //just issue this instead of fork() or system() because this process has nothing useful left to do.
-    execl("/usr/bin/ffmpeg",
-        "ffmpeg", "-r", szFps, "-i", buf, "-c:v", "libx264", buf2,
-        (char *) NULL);
-
-    perror("execl");
-    return -1;
-    #endif
