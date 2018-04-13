@@ -1,3 +1,8 @@
+IMPORTANT:
+- install ffmpeg with as much support as ypu can for common codecs to be safe,
+- Then install opencv with as much support for common codecs as you can to be safe,
+  I followed http://www.techgazet.com/install-opencv/
+
 opencv and dlib (especially the formers use of templates) can lead to longer compile times.
 I wanted to see if I could improve it by taking what would likely be needed for the project.
 
