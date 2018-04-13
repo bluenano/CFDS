@@ -1,3 +1,6 @@
+//For the person doing the database stuff, I put @DB in source code locations in this file and "db.h"
+//to point out things of interest.
+
 //See build.txt for guide to build
 
 /*              WHAT THIS DOES:
@@ -6,7 +9,7 @@
     Outputs the RELATIVE name prefixed with "out_" to the current directory.
     Say this executable is /home/jw/Data/vprocess.out
     Then:
-        jw@jw-laptop ~/Data $ ./vprocess.out $ /home/jw/a/b/c/Good/contour.avi
+        jw@jw-laptop ~/Data $ ./vprocess.out /home/jw/a/b/c/Good/contour.avi
     Will produce a file:
         /home/jw/Data/out_contour.avi
 */
@@ -21,7 +24,6 @@
     To be safe, build ffmpeg with all options for supporting more formats,
     and THEN opencv, with all options for supporting more formats.
 */
-
 
 /*
     VideoCapture and VideoWriter tested on
@@ -56,7 +58,7 @@
 
 #ifndef TRAINED_DATA_FILE
     #ifdef JONW
-        #define TRAINED_DATA_FILE "/home/jw/Data/shape_predictor_68_face_landmarks.dat"
+        #define TRAINED_DATA_FILE /home/jw/Data/shape_predictor_68_face_landmarks.dat
     #else
         #error please specify absolute path of data file,\
                 compile with -DTRAINED_DATA_FILE="..."
