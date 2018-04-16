@@ -26,7 +26,7 @@ if (!create_new_user($conn, $username, $password, $firstname, $lastname)) {
     exit_script_on_failure('USER_FAILURE');
 }
 
-echo json_encode(array('message' => 'SUCCESS'));
+echo json_encode(array('success' => TRUE));
 
 
 ?>

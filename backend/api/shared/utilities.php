@@ -1,12 +1,12 @@
 <?php
 
-// utility constants and functions to be used in our project
+// constants and functions to be used in our project
 
-define ('SITE_ROOT', '~/Sites/cs160/test');
 define ('FORMATS', array('mp4', 'avi', 'mov'));
 
 function exit_script_on_failure($message) {
-    echo json_encode(array('message' => $message));
+    echo json_encode(array('success' => FALSE,
+    	                   'message' => $message));
     exit;
 }
 
@@ -30,6 +30,15 @@ function check_filename_length($filename) {
 
 function check_extension($ext) {
 	return (bool) ((!in_array($ext, FORMATS)) ? FALSE : TRUE);
+}
+
+
+// validate a video
+function validate($path) {
+	$cmd = "ffmpeg -v error -i $path -map 0:1 -f null - 2>error.log";
+	shell_exec($cmd); 
+	$contents = file_get_contents('error.log');
+	return (strlen($contents) == 0 ? TRUE : FALSE);
 }
 
 ?>

@@ -12,6 +12,10 @@ if (is_null($conn)) {
     exit_script_on_failure("CONNECTION_ERROR");
 }
 
+// get id from $_SESSION or from the http request
+// getting the id from the server will make the api not 
+// adhere to REST because the request body should contain 
+// all the info needed to complete the request
 $id = 1;
 $videos = query_videos($conn, $id);
 

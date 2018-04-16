@@ -48,9 +48,9 @@ if (!update_after_login($conn, $_SESSION['id'], $ip, $time)) {
 
 // if client receives a session, then login was successful
 // load user account page from here
-$send = (array('SUCCESS', $session));
-echo json_encode(array('message' => 'SUCCESS',
+// also send the video data for the user
+echo json_encode(array('success' => TRUE,
+					   'userid' => $_SESSION['id'],
                        'sessionid' => $session)); 
-
   
 ?>
