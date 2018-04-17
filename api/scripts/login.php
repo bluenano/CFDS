@@ -5,7 +5,7 @@ session_start();
 include_once '../config/database.php';
 include_once '../shared/utilities.php';
 
-
+echo SITE_ROOT . "\n";
 if (!isset($_POST['username']) 
     ||
     !isset($_POST['password']))  {
