@@ -10,7 +10,6 @@ Note the escapes at the begin/end.
 
 Then to compile and link:
 
-g++ -std=c++11 -O2 -Wall -Wextra -Winvalid-pch -include "../library/pch.h" -DTRAINED_DATA_FILE=\"/home/jw/Data/shape_predictor_68_face_landmarks.dat\" *.cpp -o vprocess.out -s `pkg-config --libs opencv dlib-1` ../library/dlibface.o
+g++ -std=c++11 -O2 -Wall -Wextra -Winvalid-pch -include "../library/pch.h" -DTRAINED_DATA_FILE=\"/home/jw/Data/shape_predictor_68_face_landmarks.dat\" *.cpp -o vprocess.out -s `pkg-config --libs opencv` ../library/dlibface.o -l /path/to/dlib.a
 
-
-
+path = ~/Developer/dlib/examples/build/dlib_build/libdlib.a
