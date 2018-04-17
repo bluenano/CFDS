@@ -6,66 +6,51 @@
 // check that the file name is not larger than 250 characters
 // check that the extension is supported
 
-define ('FORMATS', array('mp4', 'avi', 'mov'));
-define ('SITE_ROOT', realpath(dirname(__FILE__)));
+include_once '../../../config.php';
+include_once '../config/database.php';
+include_once '../shared/utilities.php';
 
-function check_filename($filename) {
-	return (bool) ((preg_match("'[^-0-9A-Za-z_\.]+'", $filename)) ? FALSE : TRUE);
-}
+define ('LOCATION', dirname(__FILE__));
 
-
-function check_filename_length($filename) {
-	return (bool) ((mb_strlen($filename, 'UTF-8')) > 255 ? FALSE : TRUE); 
-}
-
-
-function check_extension($ext) {
-	return (bool) ((!in_array($ext, FORMATS)) ? FALSE : TRUE);
-}
-
-function exit_script_on_failure($error) {
-	echo json_encode($error);
-	exit;
-}
-?>
-
-
-<?php
-include('database_handler.php');
 
 if ($_FILES[0]['error'] != UPLOAD_ERR_OK) {
-	exit_script_on_failure('UPLOAD_ERROR');
+    exit_script_on_failure('UPLOAD_ERROR');
 }
 
 
 if ($_FILES[0]['size'] == 0) {
-	exit_script_on_failure('SIZE_ERROR');
+    exit_script_on_failure('SIZE_ERROR');
 }
 
 
 if (!check_filename_length($_FILES[0]['name'])
     ||
     !check_filename($_FILES[0]['name'])) {
-	exit_script_on_failure('NAME_ERROR');
+    exit_script_on_failure('NAME_ERROR');
 }
 
 
 $ext = end((explode('.', $_FILES[0]['name'])));
 if (!check_extension(strtolower($ext))) {
-	exit_script_on_failure('EXTENSION_ERROR');
+    exit_script_on_failure('EXTENSION_ERROR');
 }
 
-
-$uploads_dir = SITE_ROOT . '/uploads/';
-$uploads_file = $uploads_dir . basename($_FILES[0]['name']);
+$uploads_file = UPLOADS_DIR . basename($_FILES[0]['name']);
 $tmp_name = $_FILES[0]['tmp_name'];
 
- 
+
 if (!move_uploaded_file($tmp_name, $uploads_file)) {
     exit_script_on_failure('UPLOAD_ERROR');
 } 
 
-echo json_encode('SUCCESS');
+// now check that the video is undamaged
+if (!validate($uploads_file)) {
+    unlink('error.log');
+    exit_script_on_failure("DAMAGED_VIDEO");
+} 
+unlink('error.log');
+
+echo json_encode(array('success' => TRUE));
 // this code may be redundant depending on our implementation
 // will the php script insert the video or will eric's 
 // python script insert the video?
@@ -73,14 +58,14 @@ echo json_encode('SUCCESS');
 /*
 $conn = connect();
 if (is_null($conn)) {
-	echo "Failed to connect to the database\n";
-	exit;
+    echo "Failed to connect to the database\n";
+    exit;
 }
 
 $_SESSION['id'] = 1;
 if (!isset($_SESSION['id'])) {
-	echo "User is not logged in\n";
-	exit;
+    echo "User is not logged in\n";
+    exit;
 }
 
 
