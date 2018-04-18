@@ -54,9 +54,9 @@ int main(int, char *argv[])
 
   int count = 1;
   for (int i=0;i<68;i++) {
-    test.marks68[i].x = count;
+    test.marks68[i].x16 = count;
     count++;
-    test.marks68[i].y = count;
+    test.marks68[i].y16 = count;
     count++;
   }
 
@@ -72,9 +72,13 @@ int main(int, char *argv[])
 
   pqxx::work txn(c);
 
+  int video_id = 1;
+  int framenumber = 5;
+
   pqxx::result r1 = txn.exec(
     "INSERT INTO frame("
     "videoid, "
+    "framenumber, "
     "ftpupilrightx, "
     "ftpupilrighty, "
     "ftpupilleftx, "
@@ -83,34 +87,36 @@ int main(int, char *argv[])
     "pitch, "
     "yaw)"
     "VALUES (" +
-    txn.quote(4) + ", " +
+    txn.quote(video_id) + ", " +
+    txn.quote(framenumber) + ", " +
     txn.quote(test.right_pupil.x16) + ", " +
     txn.quote(test.right_pupil.y16) + ", " +
     txn.quote(test.left_pupil.x16) + ", " +
-    txn.quote(test.right_pupil.x16) + ", " +
+    txn.quote(test.left_pupil.y16) + ", " +
     txn.quote(test.rotation.roll) + ", " +
     txn.quote(test.rotation.pitch) + ", " +
     txn.quote(test.rotation.yaw) +
-    ")"
+    ") RETURNING frameid"
   );
 
-  pqxx::result r2 = txn.exec(
-    "INSERT INTO frame("
-    "videoid, "
-    "ftpupilrightx, "
-    "ftpupilrighty, "
-    "ftpupilleftx, "
-    "ftpupillefty, "
-    "roll, "
-    "pitch, "
-    "yaw)"
+  int frameid = r1[0][0].as<int>();
+
+  for (int i=0;i<68;i++) {
+    pqxx::result r2 = txn.exec(
+    "INSERT INTO openfacedata("
+    "pointnumber, "
+    "x, "
+    "y, "
+    "frameid)"
     "VALUES (" +
-    txn.quote(4) + ", " +
-    txn.quote(test.right_pupil.x16) + ", " +
-    txn.quote(test.right_pupil.y16) + ", " +
-    txn.quote(test.left_pupil.x16) +
+    txn.quote(i + 1) + ", " +
+    txn.quote(test.marks68[i].x16) + ", " +
+    txn.quote(test.marks68[i].y16) + ", " +
+    txn.quote(frameid) +
     ")"
   );
+    
+  }
 
   /*pqxx::result r = txn.exec(
     "SELECT width "
