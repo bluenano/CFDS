@@ -50,29 +50,6 @@ function create_new_user($conn, $username, $password, $firstname, $lastname) {
 }
 
 
-function create_session_id($conn, $id, $length = 32) {
-    try {
-        $session = generate_random_string($length); 
-        
-        while (!is_unique_session($conn, $session)) { 
-            $session = generate_random_string($length); 
-        }
-        
-        if (!insert_session($conn, $id, $session)) {
-            return FALSE;
-        }
-
-        $hashed = password_hash($session, PASSWORD_BCRYPT);
-        $encoded = urlencode($hashed);
-        return $encoded;
-    } catch (PDOException $e) {
-        return FALSE;
-    } catch (Exception $e) {
-        return FALSE;
-    }
-}
-
-
 function update_after_login($conn, $id, $ip, $login) {
     try {
         $stmt = $conn->prepare('UPDATE userinfo SET lastip = :ip, lastlogin = :login WHERE userid = :id');
@@ -113,8 +90,7 @@ function verify_session($conn, $id, $from_client) {
     if (is_null($session)) {
         return FALSE;
     }
-    $from_client = urldecode($from_client);
-    return password_verify($session, $from_client);
+    return $session === $from_client;
 }
 
 
@@ -246,14 +222,5 @@ function insert_video($conn, $id, $video_path) {
     }
 }
 */
-
-function generate_random_string($length = 32) {
-    $result = "";
-    for ($i = 0; $i < $length; $i++) {
-        $random = random_int(97, 122);
-        $result .= chr($random);
-    }
-    return $result;
-}
 
 ?>
