@@ -32,7 +32,7 @@ function create_new_user($conn, $username, $password, $firstname, $lastname) {
     }
 
     $hash = password_hash($password, PASSWORD_BCRYPT);
-    $sql = 'INSERT INTO UserInfo (Username, Password, FirstName, LastName) ' .
+    $sql = 'INSERT INTO userinfo (username, password, firstname, lastname) ' .
                'VALUES (:username, :password, :firstname, :lastname)';
         
     try {
@@ -50,32 +50,9 @@ function create_new_user($conn, $username, $password, $firstname, $lastname) {
 }
 
 
-function create_session_id($conn, $id, $length = 32) {
-    try {
-        $session = generate_random_string($length); 
-        
-        while (!is_unique_session($conn, $session)) { 
-            $session = generate_random_string($length); 
-        }
-        
-        if (!insert_session($conn, $id, $session)) {
-            return FALSE;
-        }
-
-        $hashed = password_hash($session, PASSWORD_BCRYPT);
-        $encoded = urlencode($hashed);
-        return $encoded;
-    } catch (PDOException $e) {
-        return FALSE;
-    } catch (Exception $e) {
-        return FALSE;
-    }
-}
-
-
 function update_after_login($conn, $id, $ip, $login) {
     try {
-        $stmt = $conn->prepare('UPDATE UserInfo SET LastIp = :ip, LastLogin = :login WHERE UserID = :id');
+        $stmt = $conn->prepare('UPDATE userinfo SET lastip = :ip, lastlogin = :login WHERE userid = :id');
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->bindParam(':ip', $ip, PDO::PARAM_STR);
         $stmt->bindParam(':login', $login, PDO::PARAM_STR);
@@ -113,18 +90,17 @@ function verify_session($conn, $id, $from_client) {
     if (is_null($session)) {
         return FALSE;
     }
-    $from_client = urldecode($from_client);
-    return password_verify($session, $from_client);
+    return $session === $from_client;
 }
 
 
 function query_username($conn, $id) {
     try {
-        $stmt = $conn->prepare('SELECT Username FROM UserInfo WHERE UserID = :id LIMIT 1');
+        $stmt = $conn->prepare('SELECT username FROM userinfo WHERE userid = :id LIMIT 1');
         $stmt->bindParam(':id', $id, PDO::PARAM_INT); 
         $stmt->execute();
-        $row = $stmt->fetch();
-        return (isset($row['username'])) ? $row['username'] : null; 
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return ($row) ? $row['username'] : null; 
     } catch (PDOException $e) {
         return null;
     }
@@ -133,11 +109,11 @@ function query_username($conn, $id) {
 
 function query_password($conn, $id) {
     try {
-        $stmt = $conn->prepare('SELECT password FROM UserInfo WHERE UserID = :id');
+        $stmt = $conn->prepare('SELECT password FROM userinfo WHERE userid = :id');
         $stmt->bindParam(':id', $id, PDO::PARAM_INT); 
         $stmt->execute();
-        $row = $stmt->fetch();
-        return (isset($row['password'])) ? $row['password'] : null; 
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return ($row) ? $row['password'] : null; 
     } catch (PODException $e) {
         return null;
     }
@@ -146,11 +122,11 @@ function query_password($conn, $id) {
 
 function query_session_id($conn, $id) {
     try {
-        $stmt = $conn->prepare('SELECT SessionID FROM UserInfo WHERE UserID = :id');
+        $stmt = $conn->prepare('SELECT sessionid FROM userinfo WHERE userid = :id');
         $stmt->bindParam(':id', $id, PDO::PARAM_INT); 
         $stmt->execute();
-        $row = $stmt->fetch();
-        return (isset($row['sessionid'])) ? $row['sessionid'] : null; 
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return ($row) ? $row['sessionid'] : null; 
     } catch (PDOException $e) {
         return null;
     }
@@ -159,11 +135,24 @@ function query_session_id($conn, $id) {
 
 function query_user_id($conn, $username) {
     try {
-        $stmt = $conn->prepare('SELECT UserID FROM UserInfo WHERE Username = :username');
+        $stmt = $conn->prepare('SELECT userid FROM userinfo WHERE username = :username');
         $stmt->bindParam(':username', $username, PDO::PARAM_STR);
         $stmt->execute();
-        $row = $stmt->fetch();
-        return (isset($row['userid'])) ? $row['userid'] : null;    
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return ($row) ? $row['userid'] : null;    
+    } catch (PDOException $e) {
+        return null;
+    }
+}
+
+
+function query_videos($conn, $id) {
+    try {
+        $stmt = $conn->prepare('SELECT videoid, title, uploaddate FROM video WHERE userid = :id');
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return ($results) ? $results : null;
     } catch (PDOException $e) {
         return null;
     }
@@ -175,8 +164,8 @@ function query_videopaths($conn, $id) {
         $stmt = $conn->prepare('SELECT videopath FROM video WHERE userid = :id');
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
-        $all_rows = $stmt->fetchAll();
-        return (isset($all_rows)) ? $all_rows : null;
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return ($results) ? $results : null;
     } catch (PDOException $e) {
         return null;
     }
@@ -185,10 +174,11 @@ function query_videopaths($conn, $id) {
 
 function is_unique_name($conn, $username) {
     try {
-        $stmt = $conn->prepare('SELECT * FROM UserInfo WHERE Username = :username');
+        $stmt = $conn->prepare('SELECT username FROM userinfo WHERE username = :username');
         $stmt->execute(array(':username' => $username));
-        $row = $stmt->fetch();
-        return is_null($row[0]);        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        // empty array means unique
+        return ($row) ? FALSE : TRUE;        
     } catch (PDOException $e) {
         return FALSE;
     }
@@ -197,10 +187,10 @@ function is_unique_name($conn, $username) {
 
 function is_unique_session($conn, $session) {
     try {
-        $stmt = $conn->prepare('SELECT * FROM UserInfo WHERE SessionID = :session');
+        $stmt = $conn->prepare('SELECT sessionid FROM userinfo WHERE sessionid = :session');
         $stmt->execute(array(':session' => $session));
-        $row = $stmt->fetch();
-        return is_null($row[0]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return ($row) ? FALSE : TRUE;
     } catch (PDOException $e) {
         return FALSE;
     }
@@ -209,7 +199,7 @@ function is_unique_session($conn, $session) {
 
 function insert_session($conn, $id, $session) {
     try {
-        $stmt = $conn->prepare('UPDATE UserInfo SET SessionID = :session WHERE UserID = :id');
+        $stmt = $conn->prepare('UPDATE userinfo SET sessionid = :session WHERE userid = :id');
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->bindParam('session', $session, PDO::PARAM_STR);
         return $stmt->execute();
@@ -232,14 +222,5 @@ function insert_video($conn, $id, $video_path) {
     }
 }
 */
-
-function generate_random_string($length = 32) {
-    $result = "";
-    for ($i = 0; $i < $length; $i++) {
-        $random = random_int(97, 122);
-        $result .= chr($random);
-    }
-    return $result;
-}
 
 ?>
