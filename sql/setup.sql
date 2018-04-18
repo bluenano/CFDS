@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS userinfo (
     lastname VARCHAR(255),
     lastip VARCHAR(16),
     lastlogin TIMESTAMP,
-    sessionid CHAR(32)
+    sessionid VARCHAR(128)
 );
 
 /*

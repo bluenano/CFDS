@@ -5,7 +5,7 @@ session_start();
 include_once '../config/database.php';
 include_once '../shared/utilities.php';
 
-echo SITE_ROOT . "\n";
+
 if (!isset($_POST['username']) 
     ||
     !isset($_POST['password']))  {
@@ -32,9 +32,9 @@ if (is_null($_SESSION['id'])) {
     end_session_and_exit('USERID_FAILURE');
 }
 
-
-$session = create_session_id($conn, $_SESSION['id']);
-if (!$session) {
+$sessionid = session_id();
+insert_session($conn, $_SESSION['id'], $sessionid);
+if ($sessionid === "") {
     end_session_and_exit('SESSIONID_FAILURE');
 }
 
@@ -51,6 +51,6 @@ if (!update_after_login($conn, $_SESSION['id'], $ip, $time)) {
 // also send the video data for the user
 echo json_encode(array('success' => TRUE,
 					   'userid' => $_SESSION['id'],
-                       'sessionid' => $session)); 
+                       'sessionid' => $sessionid)); 
   
 ?>
