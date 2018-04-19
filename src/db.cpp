@@ -103,33 +103,20 @@ int main(int, char *argv[])
 
   for (int i=0;i<68;i++) {
     pqxx::result r2 = txn.exec(
-    "INSERT INTO openfacedata("
-    "pointnumber, "
-    "x, "
-    "y, "
-    "frameid)"
-    "VALUES (" +
-    txn.quote(i + 1) + ", " +
-    txn.quote(test.marks68[i].x16) + ", " +
-    txn.quote(test.marks68[i].y16) + ", " +
-    txn.quote(frameid) +
-    ")"
-  );
+      "INSERT INTO openfacedata("
+      "pointnumber, "
+      "x, "
+      "y, "
+      "frameid)"
+      "VALUES (" +
+      txn.quote(i + 1) + ", " +
+      txn.quote(test.marks68[i].x16) + ", " +
+      txn.quote(test.marks68[i].y16) + ", " +
+      txn.quote(frameid) +
+      ")"
+    );
     
   }
-
-  /*pqxx::result r = txn.exec(
-    "SELECT width "
-    "FROM video "
-    "WHERE videoid = 3" + txn.quote(argv[1]));
-
-  int width = r[0][0].as<int>();
-  std::cout << "Width = " << width << std::endl;*/
-
-  /*txn.exec(
-    "UPDATE EMPLOYEE "
-    "SET salary = salary + 1 "
-    "WHERE id = " + txn.quote(employee_id));*/
 
   txn.commit();
 }
