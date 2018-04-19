@@ -1,11 +1,6 @@
 #include <iostream>
 #include <pqxx/pqxx>
 
-/*
-    These are gathered now also; once at the start of the process.
-
-    Again... not sure what do do with them...
-*/
 struct VideoMetadata
 {
     int32_t nframes;
@@ -29,13 +24,23 @@ struct EulerAnglesF32
 };
 
 /*
-    One of these is filled in each frame.
+    @DB:
+    One of these is filled in each *SUCCESFULLY read and written* frame.
+    If read but no detection, will unmodified image with a "blank" result to ensure random access consistency.
+    In that case, some fields will set to error conditions or
+    unfilled/stale data.
 
-    Some fields will be set to error conditions or
-    unfilled/stale data if detection failed, see below.
+    @DB:
+    Also, please note that it is possible that the output video will have less frames than the input due to
+    decoding/encoding read/write errors.
+    Consult with the VideoMeta struct, which can only be finalized after all processing,
+    and thus can only be sent after then.
 */
 struct FrameResults//a POD struct
 {
+    uint32_t frameno;//this might not need to be here since instances of this obj are stored as in an array,
+                     //but it was requested.
+
     PairInt16 marks68[68];  //if marks68[0].x==-1 then there was no detection,
                             //and nothing else is filled in for this entire object
 
@@ -69,11 +74,12 @@ int main(int, char *argv[])
   test.rotation.pitch = 2.22;
   test.rotation.roll = 3.33;
 
+  test.frameno = 73;
+
 
   pqxx::work txn(c);
 
   int video_id = 1;
-  int framenumber = 5;
 
   pqxx::result r1 = txn.exec(
     "INSERT INTO frame("
@@ -88,7 +94,7 @@ int main(int, char *argv[])
     "yaw)"
     "VALUES (" +
     txn.quote(video_id) + ", " +
-    txn.quote(framenumber) + ", " +
+    txn.quote(test.frameno) + ", " +
     txn.quote(test.right_pupil.x16) + ", " +
     txn.quote(test.right_pupil.y16) + ", " +
     txn.quote(test.left_pupil.x16) + ", " +
