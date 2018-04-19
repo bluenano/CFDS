@@ -36,6 +36,9 @@
 *.depend
 *.cbp
 
+*.dat
+*.bak
+
 ignore/
 bin/
 .vscode/
