@@ -1,11 +1,6 @@
 #include <iostream>
 #include <pqxx/pqxx>
 
-/*
-    These are gathered now also; once at the start of the process.
-
-    Again... not sure what do do with them...
-*/
 struct VideoMetadata
 {
     int32_t nframes;
@@ -29,13 +24,23 @@ struct EulerAnglesF32
 };
 
 /*
-    One of these is filled in each frame.
+    @DB:
+    One of these is filled in each *SUCCESFULLY read and written* frame.
+    If read but no detection, will unmodified image with a "blank" result to ensure random access consistency.
+    In that case, some fields will set to error conditions or
+    unfilled/stale data.
 
-    Some fields will be set to error conditions or
-    unfilled/stale data if detection failed, see below.
+    @DB:
+    Also, please note that it is possible that the output video will have less frames than the input due to
+    decoding/encoding read/write errors.
+    Consult with the VideoMeta struct, which can only be finalized after all processing,
+    and thus can only be sent after then.
 */
 struct FrameResults//a POD struct
 {
+    uint32_t frameno;//this might not need to be here since instances of this obj are stored as in an array,
+                     //but it was requested.
+
     PairInt16 marks68[68];  //if marks68[0].x==-1 then there was no detection,
                             //and nothing else is filled in for this entire object
 
@@ -54,9 +59,9 @@ int main(int, char *argv[])
 
   int count = 1;
   for (int i=0;i<68;i++) {
-    test.marks68[i].x = count;
+    test.marks68[i].x16 = count;
     count++;
-    test.marks68[i].y = count;
+    test.marks68[i].y16 = count;
     count++;
   }
 
@@ -69,12 +74,17 @@ int main(int, char *argv[])
   test.rotation.pitch = 2.22;
   test.rotation.roll = 3.33;
 
+  test.frameno = 73;
+
 
   pqxx::work txn(c);
+
+  int video_id = 1;
 
   pqxx::result r1 = txn.exec(
     "INSERT INTO frame("
     "videoid, "
+    "framenumber, "
     "ftpupilrightx, "
     "ftpupilrighty, "
     "ftpupilleftx, "
@@ -83,47 +93,36 @@ int main(int, char *argv[])
     "pitch, "
     "yaw)"
     "VALUES (" +
-    txn.quote(4) + ", " +
+    txn.quote(video_id) + ", " +
+    txn.quote(test.frameno) + ", " +
     txn.quote(test.right_pupil.x16) + ", " +
     txn.quote(test.right_pupil.y16) + ", " +
     txn.quote(test.left_pupil.x16) + ", " +
-    txn.quote(test.right_pupil.x16) + ", " +
+    txn.quote(test.left_pupil.y16) + ", " +
     txn.quote(test.rotation.roll) + ", " +
     txn.quote(test.rotation.pitch) + ", " +
     txn.quote(test.rotation.yaw) +
-    ")"
+    ") RETURNING frameid"
   );
 
-  pqxx::result r2 = txn.exec(
-    "INSERT INTO frame("
-    "videoid, "
-    "ftpupilrightx, "
-    "ftpupilrighty, "
-    "ftpupilleftx, "
-    "ftpupillefty, "
-    "roll, "
-    "pitch, "
-    "yaw)"
-    "VALUES (" +
-    txn.quote(4) + ", " +
-    txn.quote(test.right_pupil.x16) + ", " +
-    txn.quote(test.right_pupil.y16) + ", " +
-    txn.quote(test.left_pupil.x16) +
-    ")"
-  );
+  int frameid = r1[0][0].as<int>();
 
-  /*pqxx::result r = txn.exec(
-    "SELECT width "
-    "FROM video "
-    "WHERE videoid = 3" + txn.quote(argv[1]));
-
-  int width = r[0][0].as<int>();
-  std::cout << "Width = " << width << std::endl;*/
-
-  /*txn.exec(
-    "UPDATE EMPLOYEE "
-    "SET salary = salary + 1 "
-    "WHERE id = " + txn.quote(employee_id));*/
+  for (int i=0;i<68;i++) {
+    pqxx::result r2 = txn.exec(
+      "INSERT INTO openfacedata("
+      "pointnumber, "
+      "x, "
+      "y, "
+      "frameid)"
+      "VALUES (" +
+      txn.quote(i + 1) + ", " +
+      txn.quote(test.marks68[i].x16) + ", " +
+      txn.quote(test.marks68[i].y16) + ", " +
+      txn.quote(frameid) +
+      ")"
+    );
+    
+  }
 
   txn.commit();
 }

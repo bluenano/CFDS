@@ -19,7 +19,7 @@ lastip = '127.0.0.1'
 lastlogin = datetime.datetime.now()
 sessionid = 'abcdabcdabcdabcdabcdabcdabcdabcd'
 
-testUser = '''INSERT INTO userinfo (Username, Password, FirstName, LastName, LastIp, LastLogin, SessionID) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING UserID;'''
+testUser = '''INSERT INTO userinfo (username, password, firstname, lastname, lastip, lastlogin, sessionid) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING userid;'''
 testArg = username, password, firstname, lastname, lastip, lastlogin, sessionid
 cur.execute(testUser, testArg)
 user_id = str(cur.fetchone()[0])
@@ -27,8 +27,8 @@ print("USER ID: " + user_id)
 
 conn.commit()
 
-sql = '''INSERT INTO Video (UserID, NumFrames, FramesPerSecond, Width, Height)
-    VALUES (%s, %s, %s, %s, %s) RETURNING VideoID;'''
+sql = '''INSERT INTO video (userid, numframes, framespersecond, width, height)
+    VALUES (%s, %s, %s, %s, %s) RETURNING videoid;'''
 arg = user_id, frame_count, frame_rate, width, height
 cur.execute(sql, arg)
 video_id = str(cur.fetchone()[0])

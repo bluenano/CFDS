@@ -20,8 +20,8 @@ currenttime = datetime.now()
 conn = psycopg2.connect(host='localhost', dbname='DB', user='USER', password='PASS')
 cur = conn.cursor()
 
-sql = '''INSERT INTO Video (UserID, NumFrames, FramesPerSecond, Width, Height)
-    VALUES (%s, %s, %s, %s, %s) RETURNING VideoID;'''
+sql = '''INSERT INTO video (userid, numframes, framespersecond, width, height)
+    VALUES (%s, %s, %s, %s, %s) RETURNING videoid;'''
 arg = user_id, frame_count, frame_rate, width, height
 
 cur.execute(sql, arg)
