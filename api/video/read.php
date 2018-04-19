@@ -3,7 +3,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
 include_once '../shared/utilities.php';
-include_once '../config/database_handler.php';
+include_once '../config/database.php';
 
 $conn = connect();
 if (is_null($conn)) {
