@@ -5,11 +5,16 @@ Also, some things may need a bit of tweaking for your system. There are many way
 	Please install ffmpeg and then opencv with options to support more video codecs if you can.
 	I followed this guide to install opencv 3.3: http://www.techgazet.com/install-opencv/
 
-		sudo apt-get -y install libopencv-dev build-essential cmake git libgtk2.0-dev
-		pkg-config python-dev python-numpy libdc1394-22 libdc1394-22-dev libjpeg-dev libpng12-dev
-		libjasper-dev libavcodec-dev libavformat-dev libswscale-dev libgstreamer0.10-dev
-		libgstreamer-plugins-base0.10-dev libv4l-dev libtbb-dev libqt4-dev libfaac-dev
-		libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev libtheora-dev libvorbis-dev
+		sudo apt-get -y install libopencv-dev build-essential   
+		cmake git libgtk2.0-dev
+		pkg-config python-dev python-numpy libdc1394-22   
+		libdc1394-22-dev libjpeg-dev libpng12-dev
+		libjasper-dev libavcodec-dev libavformat-dev   
+		libswscale-dev libgstreamer0.10-dev
+		libgstreamer-plugins-base0.10-dev libv4l-dev   
+		libtbb-dev libqt4-dev libfaac-dev
+		libmp3lame-dev libopencore-amrnb-dev libopencore-amrwb-dev   
+		libtheora-dev libvorbis-dev
 		libxvidcore-dev x264 v4l-utils unzip
 
 		mkdir opencv
@@ -26,7 +31,8 @@ Also, some things may need a bit of tweaking for your system. There are many way
 
 		cd build
 
-		cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D WITH_TBB=ON -D WITH_V4L=ON -D WITH_QT=ON -D WITH_OPENGL=ON ..
+		cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local   
+		-D WITH_TBB=ON -D WITH_V4L=ON -D WITH_QT=ON -D WITH_OPENGL=ON ..
 
 		make -j $(nproc)
 
@@ -41,14 +47,18 @@ Also, some things may need a bit of tweaking for your system. There are many way
 
 2:	(skip if have dlib.a)
 	Please get the dlib source code and build the static library following their instructions
-	(before you do though, you can go into /examples/CMakeLists.txt and delete everything below line 139,
-	where most of the example targets are. Trimmed contents can look like trimmed_cmakelists.txt in this vidproc directory).
-	If you dont already have the source, you can download and unzip this where I have done the trimming:
+	(before you do though, you can go into   
+	/examples/CMakeLists.txt and delete everything below line 139,
+	where most of the example targets are.   
+	Trimmed contents can look like trimmed_cmakelists.txt in this vidproc directory).
+	If you dont already have the source,   
+	you can download and unzip this where I have done the trimming:
 	https://drive.google.com/open?id=1Jlpra7nUiMjyXjusWIRbMh4Z2o0r_DJA
 
 		Go into the examples folder and type:
 		mkdir build; cd build; cmake .. ; cmake --build .
-		That will build all the examples. If you have a CPU that supports AVX instructions then turn them on like this:
+		That will build all the examples.   
+		If you have a CPU that supports AVX instructions then turn them on like this:
 		mkdir build; cd build; cmake .. -DUSE_AVX_INSTRUCTIONS=1; cmake --build .
 
 	If that was succesful, then you should hava a static library "libdlib.a" in examples/build/dlib_build
@@ -76,10 +86,11 @@ Also, some things may need a bit of tweaking for your system. There are many way
 	example:
 		export DLIB_A_DIR='/home/jw/dlib-19.9/examples/build/dlib_build'
 
-6: 	do
-		chmod +x dep.sh
+6: 
+do
+	chmod +x dep.sh
 
-7: 	do
+7: do
 		./dep.sh dep
 	This will build a precompiled header for opencv and crunch the dlib crap thats needed once into an object file.
 	I geuss if you dont plan on modifying main, then could have been done more direct.
@@ -89,50 +100,6 @@ Also, some things may need a bit of tweaking for your system. There are many way
 	And get some sleep.
 
 Hooray.
-
-
-
-#provide defaults and put in sensible place
-#opencv notes, shoudlnt get error from libs --pkg config
-#trim dlib cmake, keep only .a
-alias DIR_DLIB_A='/home/jw/dlib-19.9/build/dlib'
-alias TRAINED_ABSOL='/home/jw/Data/shape_predictor_68_face_landmarks.dat'
-g++ -c -O2 -s -std=c++11 -Wall -Wextra -Winvalid-pch pch.h -o pch.h.gch
-g++ -c -O2 -s -std=c++11 -Wall -Wextra -Winvalid-pch -include "pch.h" facedet.cpp
-g++ -DJONW -O2 -s -std=c++11 -Wall -Winvalid-pch -include "pch.h" main.cpp hume.cpp facedet.o `pkg-config --libs opencv` -L /home/jw/dlib-19.9/build/dlib -ldlib
-#do really need -L thing?
-
-
-
-
-
-
-
-First, build the precompiled header and the dlibface.o file in ../library.
-
-You must download and unzip shape_predictor_68_face_landmarks.dat
-and #DEFINE TRAINED_DATA_FILE to its absolute path.
-For example, if it is in
-    /home/jw/Data/shape_predictor_68_face_landmarks.dat
-Then compile with:
-    -DTRAINED_DATA_FILE=\"/home/jw/Data/shape_predictor_68_face_landmarks.dat\"
-Note the escapes at the begin/end.
-
-Then to compile and link:
-
-g++ -std=c++11 -O2 -Wall -Wextra -Winvalid-pch -include "../library/pch.h" -DTRAINED_DATA_FILE=\"/home/jw/Data/shape_predictor_68_face_landmarks.dat\" *.cpp -o vprocess.out -s `pkg-config --libs opencv dlib-1` ../library/dlibface.o
-
-
-
-jw@jw-laptop ~/CS160Project/vidproc $ export GOOB='hello'
-jw@jw-laptop ~/CS160Project/vidproc $ ./build.sh 
-hello
-jw@jw-laptop ~/CS160Project/vidproc $ unset GOOB
-jw@jw-laptop ~/CS160Project/vidproc $ ./build.sh 
-nodice
-j
-rofl
-
 
 -l:
 
