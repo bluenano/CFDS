@@ -55,7 +55,7 @@ app.controller('uploadCtrl', function($scope, $http)
             }
         }
 
-        request.open('POST', 'validate_video.php', true);
+        request.open('POST', 'api/scripts/upload.php', true);
         request.send(formdata);
     }
 
@@ -78,7 +78,7 @@ app.controller('signUpCtrl', function($scope, $http) {
 		    
 		$.ajax({
 	  		type:"POST",
-	  		url: "create_account.php",
+	  		url: "api/scripts/create_account.php",
 	  		data: dataArray,
 	  		cache: false,
 	  		success: function(data) {

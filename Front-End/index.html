@@ -62,7 +62,7 @@
   				var dataString = 'username=' + document.getElementById('username').value + '&password='+document.getElementById('password').value;
 	  			$.ajax({
 	  				type:"POST",
-	  				url: "login.php",
+	  				url: "api/scripts/login.php",
 	  				data: dataString,
 	  				cache: false,
 	  				success: function(data) {
