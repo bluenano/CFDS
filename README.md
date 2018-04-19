@@ -4,6 +4,12 @@ Team 404
 There is a file in our google drive folder that describes tasks for our project.
 Feel free to add more tasks to this file.
 
+Setting up the database:
+login to psql
+CREATE DATABASE cs160;
+\c cs160
+\i /path/to/src/CS160Project/sql/setup.sql
+
 Building psycopg2:
 install python3-dev, libpq-dev if not installed
 try running pg_config --version
