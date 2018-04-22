@@ -2,8 +2,8 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
+include_once '../shared/database.php';
 include_once '../shared/utilities.php';
-include_once '../config/database.php';
 
 $conn = connect();
 if (is_null($conn)) {
@@ -16,6 +16,8 @@ if (is_null($conn)) {
 // getting the id from the server will make the api not 
 // adhere to REST because the request body should contain 
 // all the info needed to complete the request
+
+// get id from session or client
 $id = 1;
 $videos = query_videos($conn, $id);
 

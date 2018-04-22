@@ -1,6 +1,6 @@
 <?php
 
-include_once '../config/database.php';
+include_once '../shared/database.php';
 include_once '../shared/utilities.php';
 
 if (!isset($_POST['username'])

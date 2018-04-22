@@ -1,8 +1,11 @@
 <?php
 
-// utility functions to be used in our project
-include_once '../../../config.php';
- 
+// utility constants and functions to be used in our project
+
+// supported media formats
+define ('FORMATS', array('avi', 'mp4'));
+
+
 function exit_script_on_failure($message) {
     echo json_encode(array('success' => FALSE,
                            'message' => $message));
@@ -16,7 +19,6 @@ function end_session_and_exit($message) {
 }
 
 
-// validate upload files
 function check_filename($filename) {
     return (bool) ((preg_match("'[^-0-9A-Za-z_\.]+'", $filename)) ? FALSE : TRUE);
 }
@@ -33,7 +35,6 @@ function check_extension($ext) {
 }
 
 
-// validate a video
 function validate($path) {
     $cmd = "ffmpeg -v error -i $path -map 0:1 -f null - 2>error.log";
     shell_exec($cmd); 
@@ -41,4 +42,17 @@ function validate($path) {
     return (strlen($contents) == 0 ? TRUE : FALSE);
 }
 
+
+function parse_fps($ffprobeOut) {
+    $split = explode('/', $ffprobeOut);
+    return $split[0];
+}
+
+
+function parse_resolution($ffprobeOut) {
+    $split = explode("\n", $ffprobeOut);
+    $width = explode("=", $split[0]);
+    $height = explode("=", $split[1]);
+    return array($width[1], $height[1]);
+}
 ?>

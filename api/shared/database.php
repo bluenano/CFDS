@@ -5,7 +5,7 @@
 // create functions will return false on failures and exceptions
 
 
-function connect($file = 'database.ini') {
+function connect($file = '../config/database.ini') {
     if (!$settings = parse_ini_file($file, true)) {
         return null;
     }
@@ -209,18 +209,23 @@ function insert_session($conn, $id, $session) {
 }
 
 
-/*
-// may not need this function
-function insert_video($conn, $id, $video_path) {
+function insert_video($conn, $id, $title, $upload_date, $num_frames,
+                      $fps, $width, $height, $video_path) {
     try {
-        $stmt = $conn->prepare('INSERT INTO video (userid, videopath) VALUES (:id, :videopath)');
+        $stmt = $conn->prepare('INSERT INTO video (userid, title, uploaddate, numframes, framespersecond, width, height, videopath) VALUES (:id, :title, :uploaddate, :numframes, :framespersecond, :width, :height, :videopath)');
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':title', $title, PDO::PARAM_STR);
+        $stmt->bindParam(':uploaddate', $upload_date, PDO::PARAM_STR);
+        $stmt->bindParam(':numframes', $num_frames, PDO::PARAM_INT);
+        $stmt->bindParam(':framespersecond', $fps, PDO::PARAM_INT);
+        $stmt->bindParam(':width', $width, PDO::PARAM_INT);
+        $stmt->bindParam(':height', $height, PDO::PARAM_INT);
         $stmt->bindParam(':videopath', $video_path, PDO::PARAM_STR);
         return $stmt->execute();
     } catch (PDOException $e) {
         return FALSE;
     }
 }
-*/
+
 
 ?>
