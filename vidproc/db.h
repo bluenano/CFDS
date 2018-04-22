@@ -1,6 +1,8 @@
 #ifndef H_HEADER
 #define H_HEADER
 
+#include <stdint.h>
+
 /*
     These are gathered now also; once at the start of the process.
 
