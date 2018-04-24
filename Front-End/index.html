@@ -23,6 +23,7 @@
 		<br>
 	</div>
 
+<div ng-app="myApp" ng-controller="loginCtrl">
 <div class="container">
 <div class="col-md-4 col-md-offset-4">
   <form>
@@ -33,13 +34,13 @@
     <br>
     <div class="input-group">
       <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-      <input id="password" type="password" class="form-control" name="password" placeholder="Password" data-ng-model="password">
+		<input ng-model = "password" type="password" class="form-control" placeholder="Password" />
     </div>
     <br>
 
     <!-- Submit Button-->
 	<div class="col-md-4 col-md-offset-4">
-  		<button id="button" button type="button" name="button" class="btn btn-primary">Submit</button> 
+  		<button ng-click="login()" class="btn btn-primary" role="button">Submit</button> 
 	</div>
 
   </form>
@@ -50,28 +51,16 @@
 <div class="container">
 	<div class="col-md-4 col-md-offset-4">
 		<br>
-		<a link=""><center>Forgot Password? Click Here</center></p>
-		<a link=""><center>Don't Have An Account? Click Here</center></p>
+		<a link=""><center>Forgot Password? Click Here</center></p></a>
+		<a link=""><center>Don't Have An Account? Click Here</center></p></a>
 		<br>
 	</div>
 </div>
+</div>
 
-  	<script>
-  		$(document).ready(function(){
-  			$(".btn").click(function(){
-  				var dataString = 'username=' + document.getElementById('username').value + '&password='+document.getElementById('password').value;
-	  			$.ajax({
-	  				type:"POST",
-	  				url: "api/scripts/login.php",
-	  				data: dataString,
-	  				cache: false,
-	  				success: function(data) {
-	  					console.log(data);
-	  				}
-	  			});
-		  	});
-		});
-	</script>
+
+<script src="controller.js"></script>
+
 
 </body>
 </html>

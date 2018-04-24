@@ -69,12 +69,12 @@ app.controller('signUpCtrl', function($scope, $http) {
 	$scope.createAccount = function ()
 	{
 		var username = $scope.username;
-		var email = $scope.email;
+	
 		var firstname = $scope.firstname;
 		var lastname = $scope.lastname;
 		var password = $scope.password1;
 
-		var dataArray = {username, email, firstname, lastname, password};
+		var dataArray = {username, firstname, lastname, password};
 		    
 		$.ajax({
 	  		type:"POST",
@@ -82,12 +82,51 @@ app.controller('signUpCtrl', function($scope, $http) {
 	  		data: dataArray,
 	  		cache: false,
 	  		success: function(data) {
-	  		console.log(data);
+	  		   var result = JSON.parse(data);
+               if(result.success == true)
+               {
+                    window.location.href = "/cs160/test/home.html";
+               }
+               else
+               {
+                    alert('Error: username already exist');
+               }
 	  		}
 	  	});
 	}
 });
 
+app.controller('loginCtrl', function($scope, $http) {
+    $scope.login = function ()
+    {
+        var username = $scope.username;
+        var password = $scope.password;
 
+        var dataArray = {username, password};
+
+        console.log("Testing");
+
+        $.ajax({
+                type:"POST",
+                url: "api/scripts/login.php",
+                data: dataArray,
+                cache: false,
+                success: function(data) 
+                {
+                    var result = JSON.parse(data);
+                    console.log(data);
+
+                    if(result.success == true)
+                    {
+                        window.location.href = "/cs160/test/home.html";
+                    }
+                    else
+                    {
+                        alert('Error: username or password incorrect');
+                    }
+                }
+            });
+    }
+});
 
 

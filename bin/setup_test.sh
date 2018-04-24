@@ -1,6 +1,6 @@
 #!/bin/bash
-SITE=
-PROJECT=
+SITE=~/Sites/cs160
+PROJECT=/Users/erickmena/Desktop/CS160/CS160Project
 
 sudo rm -r $SITE/test
 mkdir $SITE/test/

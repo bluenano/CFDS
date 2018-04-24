@@ -52,5 +52,5 @@ if (!update_after_login($conn, $_SESSION['userid'], $ip, $time)) {
 echo json_encode(array('success' => TRUE,
 					   'userid' => $_SESSION['id'],
                        'sessionid' => $session)); 
-  
+
 ?>
