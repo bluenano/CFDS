@@ -1,10 +1,4 @@
 <?php
-header('Content-Description: File Transfer');
-header('Content-Type: application/octet-stream');
-header('Content-Disposition: attachment; filename="'.basename($file).'"');
-header('Expires: 0');
-header('Cache-Control: must-revalidate');
-header('Pragma: public');
 
 // security checks
 // check that the file is not empty
@@ -27,9 +21,9 @@ if ($_FILES[0]['size'] == 0) {
 }
 
 
-if (!check_filename_length($_FILES[0]['name'])
+if (!check_file_name_length($_FILES[0]['name'])
     ||
-    !check_filename($_FILES[0]['name'])) {
+    !check_file_name($_FILES[0]['name'])) {
     exit_script_on_failure('NAME_ERROR');
 }
 
@@ -39,16 +33,17 @@ if (!check_extension(strtolower($ext))) {
     exit_script_on_failure('EXTENSION_ERROR');
 }
 
-$filename = basename($_FILES[0]['name']);
-$uploads_file = UPLOADS_DIR . $filename;
-$tmp_name = $_FILES[0]['tmp_name'];
 
+$file_name = basename($_FILES[0]['name']);
+$uploads_file = UPLOADS_DIR . $file_name;
+$tmp_name = $_FILES[0]['tmp_name'];
 
 if (!move_uploaded_file($tmp_name, $uploads_file)) {
     exit_script_on_failure('UPLOAD_ERROR');
 } 
 
-// now check that the video is undamaged
+
+// use ffmpeg to validate the integrity of the video
 if (!validate($uploads_file)) {
     unlink('error.log');
     exit_script_on_failure("VIDEO_ERROR");
@@ -56,41 +51,45 @@ if (!validate($uploads_file)) {
 unlink('error.log');
 
 
-// now process the video
 $process_video = "./process_video.out $uploads_file";
 exec($process_video);
 // add error handling by checking exit code?
 
 
-
-// return video to client, might not need to do this
-// we might return video to client when the user
-// clicks on the Play button
-$out_file = 'out_' . $filename;
-if (file_exists($out_file)) {
-    //readfile($out_file);
-} else {
+$out_file = 'out_' . $file_name;
+if (!file_exists($out_file)) {
     exit_script_on_failure("PROCESSING_ERROR");
 }
 
 
-// now move the output video to a directory containing
-// a user's videos 
-// a user's directory will be UPLOADS_DIR/userid/
-// now insert new video into database
-// we can change this to be a flat file system later
+// get the user id from session or client http request
 $user_id = 1;
-$user_dir = UPLOADS_DIR . $user_id . '/';
-if (!file_exists($user_dir)) {
-    mkdir($user_dir, 0775, true);
+$output = array();
+$insert_into_db = "php ../video/create.php $user_id $file_name $out_file";
+exec($insert_into_db, $output);
+
+
+$video_id = (int) $output[0];
+if ($video_id == -1) {
+    exit_script_on_failure("INSERTDB_ERROR");
 }
 
-$path = $user_dir . $out_file;
-rename($out_file, $path);
 
-$insert_into_db = "php ../video/create.php $user_id $filename $path";
-exec($insert_into_db);
+$final_location = UPLOADS_DIR . $video_id . '.' . $ext;
+if (!rename($out_file, $final_location)) {
+    exit_script_on_failure("MOVE_ERROR");
+}
 
+$conn = connect();
+if (is_null($conn)) {
+    exit_script_on_failure("CONNECTION_ERROR");
+}
+
+if (!update_video_path($conn, $video_id, $final_location)) {
+    exit_script_on_failure("UPDATE_ERROR");
+}
+
+unlink($uploads_file);
 
 echo json_encode(array('success' => TRUE));
 

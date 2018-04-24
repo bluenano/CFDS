@@ -5,6 +5,7 @@ header("Content-Type: application/json; charset=UTF-8");
 include_once '../shared/database.php';
 include_once '../shared/utilities.php';
 
+
 $conn = connect();
 if (is_null($conn)) {
    //|| 
@@ -18,8 +19,8 @@ if (is_null($conn)) {
 // all the info needed to complete the request
 
 // get id from session or client
-$id = 1;
-$videos = query_videos($conn, $id);
+$user_id = 1;
+$videos = query_videos($conn, $user_id);
 
 if (is_null($videos)) {
     exit_script_on_failure("No videos found");
@@ -27,12 +28,12 @@ if (is_null($videos)) {
 
 $video_arr = array();
 for ($i = 0; $i < count($videos); $i++) {
-    $videoid = $videos[0]['videoid'];
+    $video_id = $videos[0]['videoid'];
     $title = $videos[0]['title'];
-    $uploaddate = $videos[0]['uploaddate'];
-    $video = array('videoid' => $videoid,
+    $upload_date = $videos[0]['uploaddate'];
+    $video = array('videoid' => $video_id,
                     'title' => $title,
-                    'uploaddate' => $uploaddate);
+                    'uploaddate' => $upload_date);
     array_push($video_arr, $video);
 }
 

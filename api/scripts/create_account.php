@@ -10,11 +10,11 @@ if (!isset($_POST['username'])
 }
 
 
-$username = $_POST['username'];
+$user_name = $_POST['username'];
 $password = $_POST['password'];
 
-$firstname = isset($_POST['firstname']) ? $_POST['firstname'] : null;
-$lastname = isset($_POST['lastname']) ? $_POST['lastname'] : null;
+$first_name = isset($_POST['firstname']) ? $_POST['firstname'] : null;
+$last_name = isset($_POST['lastname']) ? $_POST['lastname'] : null;
 
 $conn = connect();
 if (is_null($conn)) {
@@ -22,7 +22,7 @@ if (is_null($conn)) {
 }
 
 
-if (!create_new_user($conn, $username, $password, $firstname, $lastname)) {
+if (!create_new_user($conn, $user_name, $password, $first_name, $last_name)) {
     exit_script_on_failure('USER_FAILURE');
 }
 
