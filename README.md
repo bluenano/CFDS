@@ -27,3 +27,9 @@ sudo make install
 
 Building C++ programs using libpqxx:
 g++ -std=c++11 src.cpp -lpqxx -lpq
+
+Note to Code Reviewers:
+
+Our webpages are not fully routed yet.
+We have not implemented the ability to play an uploaded video in
+a webpage and the ability to delete an uploaded video. 
