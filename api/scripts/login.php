@@ -20,28 +20,28 @@ if (is_null($conn)) {
     end_session_and_exit('CONNECTION_FAILURE');
 }
 
-$username = $_POST['username'];
+$user_name = $_POST['username'];
 $password = $_POST['password'];
-if (!(verify_login($conn, $username, $password))) {
+if (!(verify_login($conn, $user_name, $password))) {
     end_session_and_exit('LOGIN_FAILURE');
 }
 
 
-$_SESSION['id'] = query_user_id($conn, $username);
-if (is_null($_SESSION['id'])) {
+$_SESSION['userid'] = query_user_id($conn, $user_name);
+if (is_null($_SESSION['userid'])) {
     end_session_and_exit('USERID_FAILURE');
 }
 
-$sessionid = session_id();
-insert_session($conn, $_SESSION['id'], $sessionid);
-if ($sessionid === "") {
+$session = session_id();
+insert_session($conn, $_SESSION['userid'], $session);
+if ($session === "") {
     end_session_and_exit('SESSIONID_FAILURE');
 }
 
 
 $ip = $_SERVER['REMOTE_ADDR'];
 $time = date('Y-m-d H:i:s');
-if (!update_after_login($conn, $_SESSION['id'], $ip, $time)) {
+if (!update_after_login($conn, $_SESSION['userid'], $ip, $time)) {
     end_session_and_exit('UPDATE_FAILURE');
 }
 
@@ -50,7 +50,7 @@ if (!update_after_login($conn, $_SESSION['id'], $ip, $time)) {
 // load user account page from here
 // also send the video data for the user
 echo json_encode(array('success' => TRUE,
-		       'userid' => $_SESSION['id'],
-                       'sessionid' => $sessionid)); 
-  
+					   'userid' => $_SESSION['id'],
+                       'sessionid' => $session)); 
+
 ?>

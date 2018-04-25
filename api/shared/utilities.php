@@ -19,14 +19,14 @@ function end_session_and_exit($message) {
 }
 
 
-function check_filename($filename) {
-    return (bool) ((preg_match("'[^-0-9A-Za-z_\.]+'", $filename)) ? FALSE : TRUE);
+function check_file_name($file_name) {
+    return (bool) ((preg_match("'[^-0-9A-Za-z_\.]+'", $file_name)) ? FALSE : TRUE);
 }
 
 
 // valid length is <= 255
-function check_filename_length($filename) {
-    return (bool) ((mb_strlen($filename, 'UTF-8')) > 255 ? FALSE : TRUE); 
+function check_file_name_length($file_name) {
+    return (bool) ((mb_strlen($file_name, 'UTF-8')) > 255 ? FALSE : TRUE); 
 }
 
 
@@ -43,14 +43,14 @@ function validate($path) {
 }
 
 
-function parse_fps($ffprobeOut) {
-    $split = explode('/', $ffprobeOut);
+function parse_fps($ffprobe_out) {
+    $split = explode('/', $ffprobe_out);
     return $split[0];
 }
 
 
-function parse_resolution($ffprobeOut) {
-    $split = explode("\n", $ffprobeOut);
+function parse_resolution($ffprobe_out) {
+    $split = explode("\n", $ffprobe_out);
     $width = explode("=", $split[0]);
     $height = explode("=", $split[1]);
     return array($width[1], $height[1]);
