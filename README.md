@@ -34,11 +34,11 @@ Our webpages are not fully routed yet.
 We have not implemented the ability to play an uploaded video in
 a webpage and the ability to delete an uploaded video.
 
-Here is a description of some directories to make your review easier:  
-  
-Front-End - html, css, js files . 
-api - php and configuration files for our backend infrastructure . 
-bin - script to setup our project in a directory recognized by apache . 
-sql - erd diagram and sql script to create our database tables . 
-src - test programs for database and video processing tasks . 
-vidproc - video processing code . 
+Here is a description of some directories to make your review easier:  <br /> 
+<br />
+Front-End - html, css, js files <br /> 
+api - php and configuration files for our backend infrastructure <br />
+bin - script to setup our project in a directory recognized by apache <br />
+sql - erd diagram and sql script to create our database tables <br />
+src - test programs for database and video processing tasks <br />
+vidproc - video processing code <br />
