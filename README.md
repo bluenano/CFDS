@@ -1,39 +1,36 @@
 # Computer Face Detection System
 Team 404
 
-There is a file in our google drive folder that describes tasks for our project.
-Feel free to add more tasks to this file.
+Setting up the database: <br />
+login to psql <br />
+CREATE DATABASE cs160; <br />
+\c cs160 <br />
+\i /path/to/src/CS160Project/sql/setup.sql . <br />
+<br />
+Building psycopg2: <br />
+install python3-dev, libpq-dev if not installed <br />
+try running pg_config --version <br />
+download src archive from initd.org and extract <br />
+inside src folder: <br />
+python3 setup.py build <br />
+sudo python3 setup.py install <br />
+<br />
+Building libpqxx: <br />
+git clone https://github.com/jtv/libpqxx.git <br />
+inside src folder: <br />
+./configure --disable-documentation <br />
+make <br />
+sudo make install <br />
 
-Setting up the database:
-login to psql
-CREATE DATABASE cs160;
-\c cs160
-\i /path/to/src/CS160Project/sql/setup.sql
-
-Building psycopg2:
-install python3-dev, libpq-dev if not installed
-try running pg_config --version
-download src archive from initd.org and extract
-inside src folder:
-python3 setup.py build
-sudo python3 setup.py install
-
-Building libpqxx:
-git clone https://github.com/jtv/libpqxx.git
-inside src folder:
-./configure --disable-documentation
-make
-sudo make install
-
-Building C++ programs using libpqxx:
-g++ -std=c++11 src.cpp -lpqxx -lpq
-
-Note to Code Reviewers:
-
-Our webpages are not fully routed yet.
-We have not implemented the ability to play an uploaded video in
-a webpage and the ability to delete an uploaded video.
-
+Building C++ programs using libpqxx: <br />
+g++ -std=c++11 src.cpp -lpqxx -lpq <br />
+<br />
+Note to Code Reviewers: <br />
+<br />
+Our webpages are not fully routed yet.<br />
+We have not implemented the ability to play an uploaded video in <br />
+a webpage and the ability to delete an uploaded video. <br />
+<br />
 Here is a description of some directories to make your review easier:  <br /> 
 <br />
 Front-End - html, css, js files <br /> 
