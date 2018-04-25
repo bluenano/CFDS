@@ -3,8 +3,8 @@
 // security checks
 // check that the file is not empty
 // check that file name is in english characters, numbers, and _-. symbols
-// check that the file name is not larger than 250 characters
-// check that the extension is supported
+// check that the file name is not larger than 255 characters
+// check that the extension is supported by our software
 
 include_once '../../../config.php';
 include_once '../shared/database.php';
