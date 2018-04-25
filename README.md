@@ -35,7 +35,7 @@ Here is a description of some directories to make your review easier:  <br />
 <br />
 Front-End - html, css, js files <br /> 
 api - php and configuration files for our backend infrastructure <br />
-bin - script to setup our project in a directory recognized by apache <br />
+bin - script to setup a local version of our project in a directory recognized by apache <br />
 sql - erd diagram and sql script to create our database tables <br />
 src - test programs for database and video processing tasks <br />
 vidproc - video processing code <br />
