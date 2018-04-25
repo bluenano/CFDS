@@ -50,7 +50,7 @@ if (!update_after_login($conn, $_SESSION['userid'], $ip, $time)) {
 // load user account page from here
 // also send the video data for the user
 echo json_encode(array('success' => TRUE,
-					   'userid' => $_SESSION['id'],
+                       'userid' => $_SESSION['id'],         
                        'sessionid' => $session)); 
 
 ?>
