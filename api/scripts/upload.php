@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 // security checks
 // check that the file is not empty
