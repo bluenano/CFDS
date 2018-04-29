@@ -1,0 +1,58 @@
+http://www.learnopencv.com/speeding-up-dlib-facial-landmark-detector/
+
+    Other very effective way to speed up is that decrese the pyramid_down size in "frontal_face_detector.h":
+
+    typedef object_detector<scan_fhog_pyramid<pyramid_down<6> > > frontal_face_detector;
+
+    The number 6 in the code above is a little large, resulting in a slow face detection which cost most of
+    time, although it can detect smaller faces.
+    However, if you do not need to detect such small face, you can set the number smaller, the minimum is 2, the speed can be increased 2-3 times.
+
+
+    Is is possible to do better than using the previous location of the frame?  
+    Yes, we can use Kalman filtering to predict the location of the face in frames where detection is not done, but in a webcam application it is an overkill.
+
+
+
+
+http://dlib.net/imaging.html#object_detector
+
+    This object is a tool for detecting the positions of objects in an image.  
+    In particular, it is a simple container to aggregate an instance of an image  
+    scanner object (either scan_fhog_pyramid, scan_image_pyramid, scan_image_boxes, or scan_image_custom),  
+    the weight vector needed by one of these image scanners, and finally an instance of test_box_overlap.  
+    The test_box_overlap object is used to perform non-max suppression on the output of the image scanner object.
+
+    Note that you can use the structural_object_detection_trainer to learn the parameters of an object_detector.    
+    See the example programs for an introduction.
+
+    Also note that dlib contains more powerful CNN based object detection tooling,  
+    which will usually run slower but produce much more general and accurate detectors. 
+
+
+
+
+http://dlib.net/imaging.html#scan_fhog_pyramid  
+
+    This object is a tool for running a fixed sized sliding window classifier over an image pyramid.
+    In particular, it slides a linear classifier over a HOG pyramid as discussed in the paper:
+
+        Histograms of Oriented Gradients for Human Detection by Navneet Dalal and Bill Triggs, CVPR 2005 
+
+    However, we augment the method slightly to use the version of HOG features from:
+
+        Object Detection with Discriminatively Trained Part Based Models by P. Felzenszwalb, R. Girshick,
+        D. McAllester, D. Ramanan IEEE Transactions on Pattern Analysis and Machine Intelligence, Vol. 32, No. 9, Sep. 2010 
+
+    Since these HOG features have been shown to give superior performance. 
+
+
+
+
+
+http://dlib.net/imaging.html#pyramid_down
+
+    This is a simple function object to help create image pyramids.  
+    It downsamples an image by a ratio of N to N-1 where N is supplied by the user as a template argument. 
+
+

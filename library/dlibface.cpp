@@ -5,8 +5,7 @@
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/image_processing.h>
 
-typedef dlib::frontal_face_detector Ffd;
-typedef dlib::shape_predictor Sp;
+using namespace dlib;
 
 template<class A, class B>
 struct Fits
@@ -14,54 +13,81 @@ struct Fits
     enum{value = sizeof(A) >= sizeof(B) && alignof(A) >= alignof(B) };
 };
 
-static_assert(Fits<dlFaceRoiFinder, Ffd>::value, "");
-static_assert(Fits<dlFaceMarkDetector, Sp>::value, "");
+typedef object_detector<scan_fhog_pyramid<pyramid_down<2> > > Ffd_2_1;
+static_assert(Fits<DLibFaceDetector_2_1, Ffd_2_1>::value, "please increase size of byte array in header by a multiple of 16");
 
-typedef dlib::frontal_face_detector Ffd;//and this is a typdef of some template thing, with a <6> param
-//saw a comment can make that smaller for performance increase
+typedef dlib::shape_predictor Sp;
+static_assert(Fits<DLibLandMarkDetector, Sp>::value, "please increase size of byte array in header by a multiple of 16");
 
-/*ctor*/ dlFaceRoiFinder::dlFaceRoiFinder()
+
+#ifdef WANT_6_5
+//typedef object_detector<scan_fhog_pyramid<pyramid_down<6> > > frontal_face_detector;
+typedef dlib::frontal_face_detector Ffd;
+static_assert(Fits<DLibFaceDetector, Ffd>::value, "please increase size of byte array in header by a multiple of 16");
+
+/*ctor*/ DLibFaceDetector::DLibFaceDetector()
 {
     ::new (this) Ffd(dlib::get_frontal_face_detector());
 }
 
-/*dtor*/ dlFaceRoiFinder::~dlFaceRoiFinder()
+/*dtor*/ DLibFaceDetector::~DLibFaceDetector()
 {
     reinterpret_cast<Ffd *>(this)->~Ffd();
 }
 
-std::vector<dlib::rectangle> dlFaceRoiFinder::findFaceRects(const dlib::cv_image<dlib::bgr_pixel>& img)
+std::vector<dlib::rectangle> DLibFaceDetector::findFaceRects(const dlib::cv_image<dlib::bgr_pixel>& img)//NOT CONST, BEWARE MT
 {
-    return (*reinterpret_cast<Ffd *>(this))(img);//tasteful operator()
+    return (*reinterpret_cast<Ffd *>(this))(img);//operator()
+}
+#endif
+
+//more downscaled version *************************************
+/*ctor*/ DLibFaceDetector_2_1::DLibFaceDetector_2_1()
+{
+    Ffd_2_1& r = *(::new (this) Ffd_2_1());
+    std::istringstream sin(dlib::get_serialized_frontal_faces());
+	deserialize(r, sin);
 }
 
+/*dtor*/ DLibFaceDetector_2_1::~DLibFaceDetector_2_1() 
+{
+    reinterpret_cast<Ffd_2_1 *>(this)->~Ffd_2_1();
+}
 
-/*ctor*/ dlFaceMarkDetector::dlFaceMarkDetector()
+std::vector<dlib::rectangle> DLibFaceDetector_2_1::findFaceRects(const dlib::cv_image<dlib::bgr_pixel>& img)//NOT CONST, BEWARE MT
+{
+    return (*reinterpret_cast<Ffd_2_1 *>(this))(img);//operator()
+}
+//* ************************************
+
+/*ctor*/ DLibLandMarkDetector::DLibLandMarkDetector()
 {
     ::new (this) Sp();
 }
 
-/*dtor*/ dlFaceMarkDetector::~dlFaceMarkDetector()
+/*dtor*/ DLibLandMarkDetector::~DLibLandMarkDetector()
 {
     reinterpret_cast<Sp *>(this)->~Sp();
 }
 
-int dlFaceMarkDetector::init(const char *szPath)
+int DLibLandMarkDetector::init(const char *szPath)
 {
 	try
 	{
 		dlib::deserialize(szPath) >> *reinterpret_cast<Sp *>(this);
 		return 0;
 	}
-	catch(const dlib::serialization_error& e)
+	catch (const dlib::serialization_error& e)
 	{
-		fprintf(stderr, "failed to init shape predictor from file: %s\n", e.what());
+		fputs("failed to init shape predictor from file dlib exception:\n", stderr);
+		fputs(e.what(), stderr);
 		return -1;
 	}
 }
+
 //this one is a doozy to compile
-dlFaceMarkResults dlFaceMarkDetector::detectMarks(const dlib::cv_image<dlib::bgr_pixel>& img, const dlib::rectangle& rec)
+dlib::full_object_detection DLibLandMarkDetector::detectMarks(const dlib::cv_image<dlib::bgr_pixel>& img, const dlib::rectangle& rec) const
 {
-    return (*reinterpret_cast<Sp *>(this))(img, rec);
+    return (*reinterpret_cast<const Sp *>(this))(img, rec);
 }
 
