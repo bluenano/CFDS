@@ -173,6 +173,20 @@ function query_videos($conn, $user_id) {
 }
 
 
+function query_video_path($conn, $video_id) {
+    try {
+        $stmt = $conn->prepare('SELECT videopath FROM video WHERE videoid = :id');
+        $stmt->bindParam(':id', $video_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return ($row) ? $row['videopath'] : null;
+    } catch (PDOException $e) {
+        return null;
+    }
+
+}
+
+
 function query_video_paths($conn, $user_id) {
     try {
         $stmt = $conn->prepare('SELECT videopath FROM video WHERE userid = :id');
@@ -238,6 +252,17 @@ function insert_video($conn, $user_id, $title, $upload_date, $num_frames,
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return ($row) ? $row['videoid'] : null;
+    } catch (PDOException $e) {
+        return FALSE;
+    }
+}
+
+
+function remove_video($conn, $video_id) {
+    try {
+        $stmt = $conn->prepare('DELETE FROM video WHERE videoid = :id');
+        $stmt->bindParam(':id', $video_id, PDO::PARAM_INT);
+        return $stmt->execute();
     } catch (PDOException $e) {
         return FALSE;
     }
