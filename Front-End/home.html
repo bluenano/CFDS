@@ -18,6 +18,7 @@
 </head>
 <body>
 
+<div ng-app="myApp" ng-controller="homeCtrl">
 	<nav class="navbar navbar-default">
   		<div class="container-fluid">
    		 <div class="navbar-header">
@@ -25,8 +26,8 @@
     	</div>
     <ul class="nav navbar-nav">
       <li class="active"><a>Home</a></li>
-      <li><a href="#">Upload</a></li>
-      <li><a href="#">About</a></li>
+      <li><a href="/cs160/test/upload.html">Upload</a></li>
+      <li><a href="/cs160/test/about.html">About</a></li>
     </ul>
 
     <ul class="nav navbar-nav navbar-right">
@@ -37,7 +38,7 @@
 	</nav>
 
 	<div class="container">
-		<p><center><button type="button" class="btn btn-info btn-lg">Upload</button></center></p>
+		<p><center><button ng-click="upload()" type="button" class="btn btn-info btn-lg">Upload</button></center></p>
 		<br>
 	</div>
 
@@ -71,8 +72,9 @@
 
 </div>
 </div>
+</div>
 
-
+<script src="controller.js"></script>
 
 </body>
 </html>

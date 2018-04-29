@@ -36,6 +36,7 @@ app.controller('uploadCtrl', function($scope, $http)
             formdata.append(key, value);
             var upload = document.getElementById('upload');
             upload.innerHTML = '<input type="button" value="Upload" />';
+            
         }
     });
     };
@@ -96,6 +97,7 @@ app.controller('signUpCtrl', function($scope, $http) {
 	}
 });
 
+
 app.controller('loginCtrl', function($scope, $http) {
     $scope.login = function ()
     {
@@ -129,4 +131,10 @@ app.controller('loginCtrl', function($scope, $http) {
     }
 });
 
+app.controller('homeCtrl', function($scope) {
+    $scope.upload = function() {
+        window.location.href = "/cs160/test/upload.html";
+    }
+
+});
 
