@@ -8,26 +8,12 @@ virtual environment.
 This guide might be more helpful:
 https://blogs.wcode.org/2014/10/howto-install-build-and-use-opencv-macosx-10-10/
 
-Next, you need to install dlib. This was a little tricky, but basically you
-need to install dlib using Homebrew first.
+Next, you need to install dlib.
+close dlib into /usr/local/include 
 
-brew install dlib
-
-Then, you need to clone dlib's github repository to somewhere on your system.
-
+cd /usr/local/include
 git clone https://github.com/davisking/dlib
 
-I cleared the contents of /usr/local/include/dlib and then copied the contents of the github repository to that folder.
-BE CAREFUL WHEN DOING THIS
-
-rm -r /usr/local/include/dlib
-cp -r PATH_TO_DLIB_FROM_GITHUB /usr/local/include/dlib
-
-When you clone dlib from github the folder you want to copy is ../dlib/dlib/
-
-Instead of doing the above, try cloning the github repository directly
-into /usr/local/include.
-This might work, but I can't guarantee it.
 
 Now, navigate to the examples directory in dlib and run the following commands:
 
