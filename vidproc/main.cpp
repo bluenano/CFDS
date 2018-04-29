@@ -41,17 +41,31 @@
 */
 
 /*
-    Is a C/C++ webserver too hard? Maybe I'll try later.
-
-    Make this a php or python callable library?
+    Circumvent slow dlib init:
     Shared lib?
     Daemon process (so initialization done once per system start),
     and communicate via ipc, like AF_UNIX udp example?
 
-    Possible optimization:
-        The bounding face ROI detection is actually much slower than the subsequent
-        68 point detection. If the fps is >= 24 or so, could use the same dimensions
-        from the previous detection every other time, skipping the call.
+    Possible optimizations:
+
+    The bounding face ROI detection is actually much slower than the subsequent
+    68 point detection. If the fps is >= 24 or so, could use the same dimensions
+    from the previous detection every other time, skipping the call.
+
+    Also, downscale image and detect rect on that, then scale rect.
+
+    Two threads: A, B.
+    r = VideCapture.extract
+    f = detect face rect (reportedly slower than other operations)
+    p = other processing (68 landmark detection, drawing)
+    w = VideoWriter.append
+    ~ = idle
+
+    A: rfffppw...rfffppw~
+    B: ~rfffppw...rfffppw
+
+    But can also apply every other frame rect to this threading strategy? 
+
 */
 #include "precomp.h"
 #include "db.h"

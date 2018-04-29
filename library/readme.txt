@@ -1,33 +1,19 @@
+#example usage:
+#   $ make MFLAGS='-mavx2 -I /home/jw/dlib-19.9'
+#MFLAGS can be composed of the following:
+#   -I <dlib header dir>  # if not in default path, set this so #include<dlib/xxx.h> will work
+#   -mavx2                # if your cpu supports it
+#   -DWANT_6_5            # ignore this
+
+
 IMPORTANT:
 - install ffmpeg with as much support as ypu can for common codecs to be safe,
 - Then install opencv with as much support for common codecs as you can to be safe,
   I followed http://www.techgazet.com/install-opencv/
 
-opencv and dlib (especially the formers use of templates) can lead to longer compile times.
-I wanted to see if I could improve it by taking what would likely be needed for the project.
-
-I got a big speed increase by forcing instantions of the template types the dlib face ROI and landmark detectors depend on
-in a seperate .cpp file. This can be compiled once, and the corresponding .o can be linked.
-
-Also, a precompiled header is used for opencv includes and other dlib includes I didn't want to dance around.
-
-To build the pch, issue:
-
-    g++ -c -O2 -s -std=c++11 -Wall -Wextra -Winvalid-pch pch.h -o pch.h.gch
-
-To compile dlibface.cpp into the .o:
-
-    g++ -c -O2 -s -std=c++11 -Wall -Wextra -Winvalid-pch -include "pch.h" dlibface.cpp
-
 Then to both compile and link a separate program:
 
-    g++ -O2 -s -std=c++11 -Wall -Wextra -Winvalid-pch -include "../library/pch.h" ../library/dlibface.o `pkg-config --libs opencv dlib-1` -lpthread
-
-
-../library can be a different path depending on where you're working
-
--O2 and -s aren't mandatory, but the same flags need to be used with the ones used to make the pch.
-(If this is about compilation speed, maybe I shouldn't use -O2 all the time?)
+    g++ -O2 -s -std=c++11 -Wall -Wextra -Winvalid-pch -include "../library/pch.h" *.cpp ../library/dlibface.o `pkg-config --libs opencv` -ldlib
 
 
 #dlib build notes:
