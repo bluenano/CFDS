@@ -2,8 +2,7 @@
 #   $ make MFLAGS='-mavx2 -I /home/jw/dlib-19.9'
 #MFLAGS can be composed of the following:
 #   -I <dlib header dir>  # if not in default path, set this so #include<dlib/xxx.h> will work
-#   -mavx2                # if your cpu supports it
-#   -DWANT_6_5            # ignore this
+#   -mavx2                # if your cpu supports it, if you supply this, also supply it when running the makefile in the ../deliver dir
 
 ifndef MFLAGS
     MFLAGS = 

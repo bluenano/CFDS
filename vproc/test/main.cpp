@@ -1,3 +1,5 @@
+
+
 /*              WHAT THIS DOES:
 
     Takes 1 command line arg, the video file's (absolute) name.
@@ -66,7 +68,7 @@
 */
 #include "../library/pch.h"
 
-#include "db.h"
+//#include "db.h"
 
 #ifndef TFILE
     #define TFILE "./shape_predictor_68_face_landmarks.dat"
@@ -88,6 +90,50 @@ unsigned long get_millisecs_stamp(void)
     return spec.tv_sec*1000u + spec.tv_nsec/(1000u*1000u);//10e6 millisecs per nanosec
 }
 
+void millisleep(unsigned long msecs)
+{
+    struct timespec a[2];//req, rem
+
+    if (msecs >= 1000u)
+    {
+        a[0].tv_sec = msecs/1000u;
+        a[0].tv_nsec = msecs*1000u;//only by one 1000 because secs consumed
+    }
+    else
+    {
+        a[0].tv_sec = 0;
+        a[0].tv_nsec = msecs*(1000u*1000u);
+    }
+    #if 0//untested
+    unsigned i=0;
+    while (nanosleep(&a[i], &a[i^1])!=0 && errno==EINTR)
+        i^=1;
+    #else
+    nanosleep(a+0, a+1);//const request, remaining (due to thread signal/intr) not a concern for this assignment
+    #endif
+}
+
+#include <stdint.h>
+
+/*
+    These are gathered now also; once at the start of the process.
+
+    nframes in th output video is not final until all computation is done.
+*/
+struct VideoMetadata
+{
+    int32_t nframes;
+    int32_t fps;
+    int32_t width;
+    int32_t height;
+};
+
+static
+cv::Rect dlibRectangleToOpenCV(const dlib::rectangle& r)
+{
+    return cv::Rect(cv::Point2i(r.left(), r.top()), cv::Point2i(r.right() + 1, r.bottom() + 1));
+}
+
 typedef dlib::point lmCoord;//landmark coordinate pair
 
 static
@@ -95,10 +141,11 @@ void drawDelaunay68(cv::Mat& im, const lmCoord* marks);
 
 
 //regular 6_5 is like 2.5 times slower than 2_1,
-//but not as accurate...
-//typedef DLibFaceDetector_2_1 FaceFinder;
-typedef DLibFaceDetector FaceFinder;
+//but not as accurate, compromise with 4_3
+//also: honing-in idea may help with this also
+typedef DLibFaceDetectorPyDown<4> FaceFinder;
 
+//CV_CAP_PROP_POS_FRAMES 0-based index of the frame to be decoded/captured next.
 static inline//face rect finder not const
 long int meat(const char * vfilename, FaceFinder& faceRectFinder, const DLibLandMarkDetector& markDetector)
 {
@@ -118,8 +165,21 @@ long int meat(const char * vfilename, FaceFinder& faceRectFinder, const DLibLand
     vdata.width   = vcap.get(CV_CAP_PROP_FRAME_WIDTH);
     vdata.height  = vcap.get(CV_CAP_PROP_FRAME_HEIGHT);
     int final_nframes = vdata.nframes;
+    fprintf(stderr, "nframes according to opencv: %u\n", final_nframes);
+
+    enum{MAX_FPS=30};
+
+    if (vdata.fps > MAX_FPS)//this VideoCapture...
+    {
+        puts("reducing fps");
+        if (!vcap.set(CV_CAP_PROP_FPS, MAX_FPS) || int(vdata.fps = vcap.get(CV_CAP_PROP_FPS)) != MAX_FPS )
+        {
+            fprintf(stderr, "failed to set fps to 30 from vdata.fps: %d\n", vdata.fps);
+            return -1;
+        }
+    }
+
     //fprintf(stderr, "%lf\n", vcap.get(CV_CAP_PROP_FOURCC));
-    //const int bDumpData = ! isatty(1);
 
     const char * slash = strrchr(vfilename, '/');//reverse
     cv::String voutname("out_");
@@ -153,26 +213,29 @@ long int meat(const char * vfilename, FaceFinder& faceRectFinder, const DLibLand
 
     cv::Mat im;
     dlib::rectangle faceroi;
-    bool reuse = false;
-    for (int i=0; i < final_nframes; ++i)
+    bool useprev = false;
+
+    int opencvfails = 0;
+    int i = 0;
+    while (i < final_nframes && opencvfails < 50)
     {
         if (!vcap.read(im))
         {
-            //if this happens (unlikely if VideoCap opened successfully),
-            //smush the video
-            //@DB this is where final frames in output may not match input
-            fprintf(stderr, "failed to extract frame %d\n", i);
             --final_nframes;
-            --i;//then gets inc'd back to same in continue. reuse
+            ++opencvfails;
+            millisleep(2);
             continue;
         }
 
+        ++i;
+
         //convert to dlib fmt. this isnt supposed to allocate or copy
         dlib::cv_image< dlib::bgr_pixel > const cimg(im);
+        dlib::full_object_detection detRes;
         //dlib::cv_image<unsigned char> const cimg(im);
         //more than one face can be detected, so can loop through
 
-        if ((reuse = !reuse))//need grab on i=0
+        if (!useprev)//need grab on i=0
         {
             unsigned long const tstart = get_millisecs_stamp();
             std::vector<dlib::rectangle> const faces = faceRectFinder.findFaceRects(cimg);
@@ -180,15 +243,17 @@ long int meat(const char * vfilename, FaceFinder& faceRectFinder, const DLibLand
 
             if (faces.empty())
             {
-                fprintf(stderr, "failed to get face ROI for frame %u\n", i);
-                continue;
+                fprintf(stderr, "failed to get face ROI for frame %d\n", i-1);
+                goto L_write;
             }
 
             faceroi = faces[0];
-            reuse = true;
+            useprev = true;
         }
+        else
+            useprev = false;
 
-        const dlib::full_object_detection detRes = markDetector.detectMarks(cimg, faceroi);
+        detRes = markDetector.detectMarks(cimg, faceroi);
 
         if (detRes.num_parts() != 68)
         {
@@ -198,42 +263,48 @@ long int meat(const char * vfilename, FaceFinder& faceRectFinder, const DLibLand
         {
             const lmCoord *const marks = &detRes.part(0);
 
-            drawDelaunay68(im, marks);//do after pupil detection
+            drawDelaunay68(im, marks);
+            cv::rectangle(im, dlibRectangleToOpenCV(faceroi), CV_RGB(255, 255, 0), 2);//thickness
         }//end if have 68 points
-
+    L_write:
         vwriter.write(im);
     }//for each frame
 
     vwriter.release();
+    if (opencvfails)
+        fprintf(stderr,"VideoCapture failed to read %u frames.\n", opencvfails);
     return faceTime;
 }
 
-//int main(int argc, char **argv)
-int main()
+int main(int argc, char **argv)
 {
-    /*
-    if (argc!=2)
-    {
-        fprintf(stderr, "usage: %s <video-file>\n", argv[0]);
-        return -1;
-    }
-    */
+    const char *shapeloc = TFILE;
+
+    if (argc==2)
+        shapeloc = argv[1];
 
     FaceFinder faceRectFinder;
     DLibLandMarkDetector markDetector;
 
-    if (markDetector.init(TFILE)!=0)//I made it print too...
+    if (markDetector.init(shapeloc)!=0)//I made it print too...
         return -1;
 
     char buf[128];
-    while (fputs("file: ", stdout), scanf("%124s", (char *)buf))
+    while (fputs("file: ", stdout), scanf("%124s", (char *)buf)==1)
     {
-        printf("%lu\n", meat(buf, faceRectFinder, markDetector));
+        unsigned long alltime = get_millisecs_stamp();
+        unsigned long const facetime = meat(buf, faceRectFinder, markDetector);
+        alltime = get_millisecs_stamp() - alltime;
+
+        printf("face_time: %lu, total: %lu\n", facetime, alltime);
     }
 
     return 0;
 }
 //location of all 68 points are known relative to each other, could draw directly
+//EDIT: NEED TO FIX THIS LIKE IN MAIN DELIVER,
+//will fail on some videos where face detector gives
+//a rectangle that goes outside of the original image
 void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks)
 {
     cv::Size const dims = im.size();
@@ -269,3 +340,86 @@ void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks)
 		cv::circle(im, cv::Point(dpt.x(), dpt.y()), 2, cv::Scalar(0, 0, 255), CV_FILLED, CV_AA, 0);
 	}
 }
+
+    /*
+    if (argc!=2)
+    {
+        fprintf(stderr, "usage: %s <video-file>\n", argv[0]);
+        return -1;
+    }
+    */
+
+/* 6 to 5
+file: /home/jw/Data/7.mp4
+nframes according to opencv: 40
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+face_time: 867, total: 1502
+file: /home/jw/Data/7.mp4
+nframes according to opencv: 40
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+face_time: 865, total: 1477
+file: /home/jw/Data/7.mp4
+nframes according to opencv: 40
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+face_time: 863, total: 1465
+file:
+*/
+
+/* 4 to 3:
+file: /home/jw/Data/7.mp4
+nframes according to opencv: 40
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+face_time: 590, total: 1266
+file: /home/jw/Data/7.mp4
+nframes according to opencv: 40
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+face_time: 591, total: 1216
+file: /home/jw/Data/7.mp4
+nframes according to opencv: 40
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+face_time: 599, total: 1196
+file:
+*/
+
+/* 2 to 1:
+file: /home/jw/Data/7.mp4
+nframes according to opencv: 40
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+face_time: 316, total: 946
+file: /home/jw/Data/7.mp4
+nframes according to opencv: 40
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+face_time: 303, total: 924
+file: /home/jw/Data/7.mp4
+nframes according to opencv: 40
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+face_time: 311, total: 930
+file:
+*/

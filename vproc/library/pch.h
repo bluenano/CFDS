@@ -17,25 +17,23 @@
 
 #include <pthread.h>
 
-#ifdef WANT_6_5
-class DLibFaceDetector
+template<int I>
+class DLibFaceDetectorPyDown
 {
     alignas(16) unsigned char m[256];
 public:
-    DLibFaceDetector();//def ctor
-    ~DLibFaceDetector();//destructor
+    DLibFaceDetectorPyDown();
+    ~DLibFaceDetectorPyDown();
     std::vector<dlib::rectangle> findFaceRects(const dlib::cv_image<dlib::bgr_pixel>&);//THIS IS NOT CONST, CARE MULTITHREAD
 };
-#endif
 
-class DLibFaceDetector_2_1
-{
-    alignas(16) unsigned char m[256];
-public:
-    DLibFaceDetector_2_1();//def ctor
-    ~DLibFaceDetector_2_1();//destructor
-    std::vector<dlib::rectangle> findFaceRects(const dlib::cv_image<dlib::bgr_pixel>&);//THIS IS NOT CONST, CARE MULTITHREAD
-};
+//lets experiment with different params
+//why are these templates, and not something can pass at run time?
+//maybe I should do a noop one, and do the scaling manually, so not 18 million templates...
+//but after testing, will prob get rid of all but 1.
+//extern template class DLibFaceDetectorPyDown<6>;//the regular one
+extern template class DLibFaceDetectorPyDown<4>;
+//extern template class DLibFaceDetectorPyDown<2>;
 
 class DLibLandMarkDetector
 {

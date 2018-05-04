@@ -1,19 +1,15 @@
-#example usage:
+#how to build this lib once you have all dependencies (opencv installed, libdlib.a)
 #   $ make MFLAGS='-mavx2 -I /home/jw/dlib-19.9'
 #MFLAGS can be composed of the following:
 #   -I <dlib header dir>  # if not in default path, set this so #include<dlib/xxx.h> will work
-#   -mavx2                # if your cpu supports it
-#   -DWANT_6_5            # ignore this
+#   -mavx2                # if your cpu supports it, if you supply this, also supply it when running the makefile in the ../deliver dir
+
 
 
 IMPORTANT:
-- install ffmpeg with as much support as ypu can for common codecs to be safe,
-- Then install opencv with as much support for common codecs as you can to be safe,
+- Install ffmpeg with support for common codecs.
+- Then, install opencv with support for common codecs.
   I followed http://www.techgazet.com/install-opencv/
-
-Then to both compile and link a separate program:
-
-    g++ -O2 -s -std=c++11 -Wall -Wextra -Winvalid-pch -include "../library/pch.h" *.cpp ../library/dlibface.o `pkg-config --libs opencv` -ldlib
 
 
 #dlib build notes:

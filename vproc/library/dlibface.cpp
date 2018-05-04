@@ -13,13 +13,14 @@ struct Fits
     enum{value = sizeof(A) >= sizeof(B) && alignof(A) >= alignof(B) };
 };
 
-typedef object_detector<scan_fhog_pyramid<pyramid_down<2> > > Ffd_2_1;
-static_assert(Fits<DLibFaceDetector_2_1, Ffd_2_1>::value, "please increase size of byte array in header by a multiple of 16");
 
 typedef dlib::shape_predictor Sp;
 static_assert(Fits<DLibLandMarkDetector, Sp>::value, "please increase size of byte array in header by a multiple of 16");
 
 
+#if 0
+typedef object_detector<scan_fhog_pyramid<pyramid_down<2> > > Ffd_2_1;
+static_assert(Fits<DLibFaceDetector_2_1, Ffd_2_1>::value, "please increase size of byte array in header by a multiple of 16");
 #ifdef WANT_6_5
 //typedef object_detector<scan_fhog_pyramid<pyramid_down<6> > > frontal_face_detector;
 typedef dlib::frontal_face_detector Ffd;
@@ -59,6 +60,7 @@ std::vector<dlib::rectangle> DLibFaceDetector_2_1::findFaceRects(const dlib::cv_
     return (*reinterpret_cast<Ffd_2_1 *>(this))(img);//operator()
 }
 //* ************************************
+#endif
 
 /*ctor*/ DLibLandMarkDetector::DLibLandMarkDetector()
 {
@@ -91,3 +93,32 @@ dlib::full_object_detection DLibLandMarkDetector::detectMarks(const dlib::cv_ima
     return (*reinterpret_cast<const Sp *>(this))(img, rec);
 }
 
+template<int I>
+/*ctor*/ DLibFaceDetectorPyDown<I>::DLibFaceDetectorPyDown()
+{
+	typedef object_detector<scan_fhog_pyramid<pyramid_down<I> > > Ffd_I;
+
+	static_assert(Fits< DLibFaceDetectorPyDown<I>, Ffd_I >::value, "");
+
+    Ffd_I& r = *(::new (this) Ffd_I());
+    std::istringstream sin(dlib::get_serialized_frontal_faces());
+	deserialize(r, sin);
+}
+
+template<int I>
+/*dtor*/ DLibFaceDetectorPyDown<I>::~DLibFaceDetectorPyDown() 
+{
+	typedef object_detector<scan_fhog_pyramid<pyramid_down<I> > > Ffd_I;
+    reinterpret_cast<Ffd_I *>(this)->~Ffd_I();
+}
+template<int I>
+std::vector<dlib::rectangle> DLibFaceDetectorPyDown<I>::findFaceRects(const dlib::cv_image<dlib::bgr_pixel>& img)//NOT CONST, BEWARE MT
+{
+	typedef object_detector<scan_fhog_pyramid<pyramid_down<I> > > Ffd_I;
+    return (*reinterpret_cast<Ffd_I *>(this))(img);//operator()
+}
+
+//template class DLibFaceDetectorPyDown<6>;//the regular one
+template class DLibFaceDetectorPyDown<4>;
+//template class DLibFaceDetectorPyDown<2>;
+//* ************************************

@@ -1,6 +1,22 @@
-#include "opencv2/objdetect/objdetect.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
+/*
+    (JW): Face Rect
+
+    This file is mainly a concatenation of code from: https://github.com/trishume/eyeLike
+
+    Some modifcations include changing the static consts to enums,
+    as clang appeared to give warnings to may partners about some of them being unused.
+
+    Everything here is internal, except I have added one extern function
+    at the end of the file "detectPupilHume" that takes a cv mat of
+    the whole image (not the face, but I don't think matters) and the ROI for an eye.
+    It passes a gray scale version of that mat to Hume's "findEyeCenter",
+    and my function converts the return value relative to the whole image,
+    not the passed eye ROI.
+*/
+
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 //#include <mgl2/mgl.h>
 
@@ -12,6 +28,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#if 0
 // Debugging
 const bool kPlotVectorField = false;
 
@@ -26,8 +43,7 @@ const bool kSmoothFaceImage = false;
 const float kSmoothFaceFactor = 0.005;
 
 // Algorithm Parameters
-//const int kFastEyeWidth = 50;
-const int kFastEyeWidth = 100;//higher is more accurate, but slower
+const int kFastEyeWidth = 50;//higher is more accurate, but slower
 const int kWeightBlurSize = 5;
 const bool kEnableWeight = true;
 const float kWeightDivisor = 1.0;
@@ -39,6 +55,34 @@ const float kPostProcessThreshold = 0.97;
 
 // Eye Corner
 const bool kEnableEyeCorner = false;
+#endif
+
+enum : int
+{
+    // Size constants
+    kEyePercentTop = 25,
+    kEyePercentSide = 13,
+    kEyePercentHeight = 30,
+    kEyePercentWidth = 35,
+
+    kFastEyeWidth = 50,//higher is more accurate, but slower
+    kWeightBlurSize = 5
+};
+
+enum : bool
+{
+    kEnableWeight = true,
+    kEnablePostProcess = true,
+    kEnableEyeCorner = false,
+    kPlotVectorField = false,
+};
+
+
+const float kPostProcessThreshold = 0.97f;
+const float kSmoothFaceFactor = 0.005f;
+const float kWeightDivisor = 1.0f;
+
+const double kGradientThreshold = 50.0;
 
 #endif
 //#include "helpers.h"
@@ -146,7 +190,8 @@ void testPossibleCentersFormula(int x, int y, const cv::Mat &weight,double gx, d
   }
 }
 
-extern//only one
+//extern//only one
+static
 cv::Point findEyeCenter(const cv::Mat& wgim/*face*/, cv::Rect eye/*, std::string debugWindow*/) {
   cv::Mat eyeROIUnscaled = wgim(eye);//whole image gray scale
   cv::Mat eyeROI;
@@ -311,4 +356,18 @@ double computeDynamicThreshold(const cv::Mat &mat, double stdDevFactor) {
   cv::meanStdDev(mat, meanMagnGrad, stdMagnGrad);
   double stdDev = stdMagnGrad[0] / sqrt(mat.rows*mat.cols);
   return stdDevFactor * stdDev + meanMagnGrad[0];
+}
+
+extern//added
+cv::Point detectPupilHume(cv::Mat& im, cv::Rect eye)
+{
+    using namespace cv;
+
+    Mat wholeGray;//he was doing some weird split channels thing that didn't work for me?
+    cvtColor(static_cast<const Mat&>(im), wholeGray, CV_BGR2GRAY);
+
+    cv::Point const pnt = findEyeCenter(static_cast<const Mat&>(wholeGray), eye);//rel to eye rect
+
+    cv::Point const icare = cv::Point(pnt.x + eye.x, pnt.y + eye.y);
+    return icare;
 }
