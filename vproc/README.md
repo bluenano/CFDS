@@ -98,3 +98,5 @@ If that was succesful, then you should hava a static library "libdlib.a" in exam
 6:  Now you should have an exe 'vidproc.out' built. See top of deliver/main.cpp for how to run it with the right arguments.  
 
 One more thing: have a postgres account with password postgres
+
+MacOS notes: I needed to change the include for the libpq-fe.h from <postgresql/libpq-fe.h> to just <libpq-fe.h> in db.h and when you compile in step 5 you need to add -I /path_to_libpq_include. On my system, this was in /usr/local/Cellar/libpq/10.3/include
