@@ -8,5 +8,5 @@ virtual environment.
 This guide might be more helpful:
 https://blogs.wcode.org/2014/10/howto-install-build-and-use-opencv-macosx-10-10/
 
-then see vproc/README.md
+then see vproc/deliver/README.md
 
