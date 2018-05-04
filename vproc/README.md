@@ -96,3 +96,5 @@ If that was succesful, then you should hava a static library "libdlib.a" in exam
 ```
 
 6:  Now you should have an exe 'vidproc.out' built. See top of deliver/main.cpp for how to run it with the right arguments.  
+
+One more thing: have a postgres account with password postgres
