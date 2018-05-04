@@ -40,5 +40,5 @@
 *.bak
 
 ignore/
-bin/
+release/
 .vscode/

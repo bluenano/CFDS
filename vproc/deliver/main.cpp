@@ -1,7 +1,14 @@
 /*
+    If its run from php, I geuss it puts it in the dir of the php script... IDK
+
 	This takes a video file name, and outputs a processed one
-	of the same relative name, but with 'out_' prepended to it. That is placed
-	in the directory of this executable.
+	in the directory of this executable. The processed video name is returned in the status string.
+	The status could be something like this:
+        tt hello.mp4
+    The first char ([0]) is 't' if a video was successfully made.
+    The second char ([1]) is 't' if there was a successful transaction commit to the database.
+    Then there is a space, followed by the output video name relative to this exe's working dir.
+    (it might be different then the input if it has to be encoded differently)
 
 	The video id must also be supplied and it must be a valid reference
 	to something already inserted in the table.
@@ -13,7 +20,7 @@
 	1:	Just run once, then process ends.
 		The format for that is:
 			<exe.out> <video_file> <videoid> [shape_predictor trained file]
-		The shape predictor arg is optional, defaults to ../shape_predictor_68_face_landmarks.dat (parent dir)
+		The shape predictor arg is optional, defaults to shape_predictor_68_face_landmarks.dat (working dir)
 			$ ./vidproc.out /tmp/testvid.mp4 6
 		You can also run this from a php script, see php_exec.php for an example.
 
@@ -22,7 +29,7 @@
 		Those packets should be a string comprised of a video file name concatenated with a space, then a video id as text.
 		See php_af_unix.php for an example. Before you run that though, you need to run this in daemon mode:
 			$ ./vidproc.out
-		You can also supply the shape_predictor thing if it is not in the parent dir of the exe.
+		You can also supply the shape_predictor thing if it is not in the working dir of this exe.
 */
 
 
@@ -32,11 +39,17 @@
 //For the person doing the database stuff, I put @DB in source code locations in this file and "db.h"
 //to point out things of interest.
 
+/*
+('X','V','I','D').
+.avi
+http://answers.opencv.org/question/66545/problems-with-the-video-writer-in-opencv-300/
+*/
+
 #include "../library/pch.h"
 #include "db.h"
 
 #ifndef TRAINED_FILE
-    #define TRAINED_FILE "../shape_predictor_68_face_landmarks.dat"
+    #define TRAINED_FILE "/usr/local/share/shape_predictor_68_face_landmarks.dat"
 #endif
 
 #if 0
@@ -150,8 +163,12 @@ cv::Rect getRightRoi(cv::Size dims, const lmCoord* a)
 extern//hume.cpp
 cv::Point detectPupilHume(cv::Mat& im, cv::Rect eye);
 
+//#include <unistd.h>
+//char g_cwd[2048];
+
 static
 int processVideo(const char* vfilename,
+                 std::string& outsref,
                  unsigned videoid,
                  DLibFaceDetector& faceRectFinder,
                  const DLibLandMarkDetector& markDetector,
@@ -175,8 +192,7 @@ int processVideo(const char* vfilename,
     //const int bDumpData = ! isatty(1);
 
     const char * slash = strrchr(vfilename, '/');//reverse
-    cv::String voutname("out_");
-    voutname += (slash==nullptr ? vfilename : slash+1);
+    cv::String voutname = (slash==nullptr ? vfilename : slash+1);
 
     cv::VideoWriter vwriter(voutname,
                             vcap.get(CV_CAP_PROP_FOURCC),
@@ -216,6 +232,7 @@ int processVideo(const char* vfilename,
 
     fputs("entering read/process loop\n", stderr);
     unsigned long const start_ms = get_millisecs_stamp();
+    char status[4] = {'f','f',' ',0};//[0] is video is good, [1] is db transaction commited succesfully
     for (int i=0; i < final_nframes; ++i)
     {
         all.frameno = i;//@DB: zero-based
@@ -315,6 +332,7 @@ int processVideo(const char* vfilename,
 
     Lwrite: //put stuff in db for random access and size consistency,
             //expecting few errors, and successes (common case) will put data for every frame.
+        status[0]='t';
         vwriter.write(im);//the return type of this is void
         db.do_something_with_results(all, videoid);//@DB
     }//for each frame
@@ -327,9 +345,17 @@ int processVideo(const char* vfilename,
 
     db.update_video(vdata, videoid);
 
-    (void)db.end_transaction_ok();
+    if (db.end_transaction_ok())
+        status[1] = 't';
+
     unsigned long const stop_ms = get_millisecs_stamp();
     printf("Everything except most initialization took about %u ms\n", unsigned(stop_ms-start_ms));
+
+    outsref.clear();
+    outsref += (const char *)status;
+    outsref += voutname.c_str();
+    //printf("%c%c %s", status[0], status[1], voutname.c_str());//put a newline?
+    fwrite(outsref.data(), 1, outsref.size(), stdout);
     return 0;
 }
 
@@ -388,12 +414,15 @@ int main(int argc, char **argv)
     DLibFaceDetector faceRectFinder;
     DLibLandMarkDetector markDetector;
 
+    faceRectFinder.init();
+
     if (markDetector.init(trained)!=0)//I made it print too...
         return -1;
 
     if (!daemon)
     {
-        processVideo(argv[1], videoid, faceRectFinder, markDetector, db);
+        std::string stdstr;
+        return processVideo(argv[1], stdstr, videoid, faceRectFinder, markDetector, db);
     }
     else
     {
@@ -421,7 +450,7 @@ int main(int argc, char **argv)
 
         struct sockaddr_un client_address;
         socklen_t saddrlen = sizeof(struct sockaddr_un);
-
+        std::string sendpkt;
         for (;;)
         {
         	puts("waiting for packet...");
@@ -439,9 +468,9 @@ int main(int argc, char **argv)
             if (sscanf(buf, "%s %d", (char* )videofile, &videoid)!=2) {
                 fprintf(stderr, "packet in bad format: %s\n", buf); continue;  }
 
-            processVideo(videofile, videoid, faceRectFinder, markDetector, db);
+            processVideo(videofile, sendpkt, videoid, faceRectFinder, markDetector, db);
 
-            if (sendto(sock, "ok", 2, 0, (struct sockaddr *) &client_address, saddrlen) != 2)
+            if (sendto(sock, sendpkt.data(), sendpkt.size(), 0, (struct sockaddr *) &client_address, saddrlen) != 2)
                 perror("sendto()");
         }
     }

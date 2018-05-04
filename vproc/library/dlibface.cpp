@@ -100,9 +100,34 @@ template<int I>
 
 	static_assert(Fits< DLibFaceDetectorPyDown<I>, Ffd_I >::value, "");
 
-    Ffd_I& r = *(::new (this) Ffd_I());
-    std::istringstream sin(dlib::get_serialized_frontal_faces());
-	deserialize(r, sin);
+	::new (this) Ffd_I();
+    //Ffd_I& r = *(::new (this) Ffd_I());
+    //std::istringstream sin(dlib::get_serialized_frontal_faces());
+	//deserialize(r, sin);
+}
+
+template<int I>
+void DLibFaceDetectorPyDown<I>::init(DLibFaceDetectorPyDown<I>* another)
+{
+	typedef object_detector<scan_fhog_pyramid<pyramid_down<I> > > Ffd_I;
+
+	std::istringstream ssin(dlib::get_serialized_frontal_faces());
+
+	Ffd_I* tptr = reinterpret_cast<Ffd_I *>(this);
+
+	for (;;)
+	{
+		deserialize(*reinterpret_cast<Ffd_I *>(tptr), ssin);
+
+		tptr = reinterpret_cast<Ffd_I *>(another);
+		another = nullptr;
+
+		if (!tptr)
+			break;
+
+		ssin.clear();
+		ssin.seekg(0, std::ios_base::beg);
+	}
 }
 
 template<int I>

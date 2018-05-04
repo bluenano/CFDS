@@ -107,8 +107,10 @@ public:
 
     bool begin_transaction_ok()
     {
-        if (error_occurred)//If daemon, should try reset on subsequent?
-            return false;
+        //if (error_occurred)//If daemon, should try reset on subsequent?
+            //return false;
+        //yeah, will do that. shouldnt get here if conn failed anyway
+        error_occurred = false;
 
         PGresult *const res = PQexec(conn, "BEGIN");
 

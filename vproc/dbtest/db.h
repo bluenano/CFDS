@@ -58,7 +58,7 @@ struct FrameResults//a POD struct
 
     EulerAnglesF32 rotation;//if marks68 found, then these will be filled in
 };
-//this is a 292 byte structure
+//this is a 296 byte structure
 static_assert(sizeof(FrameResults)==296, "");
 
 #endif // H_HEADER

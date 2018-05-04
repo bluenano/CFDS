@@ -11,7 +11,7 @@ endif
 $(info MFLAGS=$(MFLAGS))
 
 all : main.o db.o hume.o
-		g++ $(MFLAGS) -s -o vidproc.out ../library/dlibface.o *.o -ldlib `pkg-config --libs opencv` -lpq
+		g++ $(MFLAGS) -s -o ../../bin/vidproc.out ../library/dlibface.o *.o -ldlib `pkg-config --libs opencv` -lpq
 
 main.o : main.cpp
 		g++ $(MFLAGS) -c -O2 -s -std=c++11 -Wall -Wextra -Winvalid-pch -include "../library/pch.h" main.cpp

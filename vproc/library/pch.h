@@ -20,11 +20,16 @@
 template<int I>
 class DLibFaceDetectorPyDown
 {
-    alignas(16) unsigned char m[256];
+    alignas(64) unsigned char m[256];
 public:
     DLibFaceDetectorPyDown();
     ~DLibFaceDetectorPyDown();
     std::vector<dlib::rectangle> findFaceRects(const dlib::cv_image<dlib::bgr_pixel>&);//THIS IS NOT CONST, CARE MULTITHREAD
+
+    //if want to try using another thread, think will need one for each
+    //just make this a member function, and only up to anotehr thread,
+    //suits use and just one extner template class
+    void init(DLibFaceDetectorPyDown* another=nullptr);
 };
 
 //lets experiment with different params
