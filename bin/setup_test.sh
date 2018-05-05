@@ -23,7 +23,7 @@ cp $PROJECT/src/api/video/*.php $SITE/test/api/video
 cp $PROJECT/src/api/scripts/*.php $SITE/test/api/scripts
 cp $PROJECT/src/api/shared/*.php $SITE/test/api/shared
 
-cp $PROJECT/bin/process_video.out $SITE/test/api/scripts
+cp $PROJECT/bin/vidproc.out $SITE/test/api/scripts
 cp $PROJECT/data/shape_predictor_68_face_landmarks.dat $SITE/test/api/scripts
 
 mv $SITE/test/index.html $SITE/test/login.html

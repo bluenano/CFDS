@@ -59,12 +59,12 @@ $insert_into_db = "php ../video/create.php $user_id $file_name $uploads_file";
 exec($insert_into_db, $output);
 
 $video_id = (int) $output[0];
-$process_video = "./process_video.out $uploads_file $video_id";
+$process_video = "./vidproc.out $uploads_file $video_id";
 exec($process_video);
 // add error handling by checking exit code?
 
-$out_file = 'out_' . $file_name;
-if (!file_exists($out_file)) {
+
+if (!file_exists($file_name)) {
     exit_script_on_failure("PROCESSING_ERROR");
 }
 
@@ -75,7 +75,7 @@ if ($video_id == -1) {
 
 
 $final_location = UPLOADS_DIR . $video_id . '.' . $ext;
-if (!rename($out_file, $final_location)) {
+if (!rename($file_name, $final_location)) {
     exit_script_on_failure("MOVE_ERROR");
 }
 
