@@ -48,8 +48,20 @@ http://answers.opencv.org/question/66545/problems-with-the-video-writer-in-openc
 #include "../library/pch.h"
 #include "db.h"
 
+/*
+    bin/
+        * this exe
+    data/
+        * shape_pred.dat
+*/
+
+#define STRINGIFY(a) #a
+#define STR_UNWRAPPED(a) STRINGIFY(a)
+
+#define ABSOL_STR STR_UNWRAPPED(ABSOL)
+
 #ifndef TRAINED_FILE
-    #define TRAINED_FILE "/usr/local/share/shape_predictor_68_face_landmarks.dat"
+    #define TRAINED_FILE STR_UNWRAPPED(ABSOL)
 #endif
 
 #if 0

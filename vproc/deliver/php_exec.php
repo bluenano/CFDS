@@ -16,11 +16,11 @@ jw@jw-laptop ~/CS160Project/vproc/deliver $
 echo "I'm in.\n";
 
 $videoid = "6"; //string
-$videofile = "/usr/local/share/testvid.mp4";
+$videofile = "../../videos/testvid.mp4"; //@sean you may need to have more or less ../
 
 $packet = $videofile." ".$videoid;
 
-$sres = exec("../../bin/vidproc.out ".$packet);//space between exe
+$sres = exec("../../bin/vidproc.out ".$packet);//space between exe and packet, for exe: //@sean you may need to have more or less ../
 
 if (strlen($sres) < 3) {
     echo "error occured\n";

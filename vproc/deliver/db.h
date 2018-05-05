@@ -67,7 +67,8 @@ struct FrameResults//a POD struct
 //this is a 296 byte structure
 static_assert(sizeof(FrameResults)==296, "");
 
-#include <postgresql/libpq-fe.h>
+//#include <postgresql/libpq-fe.h>
+#include <libpq-fe.h>
 
 class DataBase
 {

@@ -47,7 +47,7 @@ if (socket_bind($socket, $file) === false) {
 }
 
 $videoid = "6"; //string
-$videofile = "/usr/local/share/testvid.mp4";
+$videofile = "../../videos/testvid.mp4"; //@sean you may need to have more or less ../
 
 $packet = $videofile . ' ' . $videoid;
 
