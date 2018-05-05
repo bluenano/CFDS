@@ -51,10 +51,17 @@ if (!validate($uploads_file)) {
 unlink('error.log');
 
 
-$process_video = "./process_video.out $uploads_file";
+// this needs to be changed, must insert video first to get
+// a video id
+$user_id = 1;
+$output = array();
+$insert_into_db = "php ../video/create.php $user_id $file_name $uploads_file";
+exec($insert_into_db, $output);
+
+$video_id = (int) $output[0];
+$process_video = "./process_video.out $uploads_file $video_id";
 exec($process_video);
 // add error handling by checking exit code?
-
 
 $out_file = 'out_' . $file_name;
 if (!file_exists($out_file)) {
@@ -62,14 +69,6 @@ if (!file_exists($out_file)) {
 }
 
 
-// get the user id from session or client http request
-$user_id = 1;
-$output = array();
-$insert_into_db = "php ../video/create.php $user_id $file_name $out_file";
-exec($insert_into_db, $output);
-
-
-$video_id = (int) $output[0];
 if ($video_id == -1) {
     exit_script_on_failure("INSERTDB_ERROR");
 }
