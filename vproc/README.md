@@ -3,9 +3,6 @@
 #### This looks long, but I've pasted instructions for the above from their websites here also.
 
 
-Some steps may be skipped if opencv is installed or the static library libdlib.a was already made.
-Also, some things may need a bit of tweaking for your system. There are many ways to link/include what is needed.
-
 1: 	(skip if have opencv installed)
 	Please install ffmpeg and then opencv with options to support more video codecs if you can.
 	I followed this guide to install opencv 3.3: http://www.techgazet.com/install-opencv/
@@ -48,7 +45,7 @@ Also, some things may need a bit of tweaking for your system. There are many way
 		#created needed linking
 		sudo ldconfig
 
-If that was succesful, you should not get errors for the argument `pkg-config --libs opencv` that will be passed to g++ later.
+If that was succesful, you should not get errors for the argument `pkg-config --libs opencv` that will be passed to g++ for linking later.
 
 2:	(skip if have dlib.a)
 	Please get the dlib source code and build the static library following their instructions
@@ -72,31 +69,24 @@ If that was succesful, then you should hava a static library "libdlib.a" in exam
 3:	dlib's shape_predictor, which detects the 68 marks after a face bounding box has been detected,  
 	needs to be initialized with trained data. Currently this is done by a file.  
 	Please download https://drive.google.com/open?id=15oAnTDNuMSenNLOYmFzUvtI565-cCFHb.  
-	IMPORTANT: unzip it in the root directory of this for easiest use.  
+	Unzip it in a place so that it can have an absolute path without special characters like `~/`, `./` or `../`  
 
 
-4:  cd to my library/ dir and type run the makefile:  
-```
-#example usage:
-#   $ make MFLAGS='-mavx2 -I /home/jw/dlib-19.9'
-#MFLAGS can be composed of the following:
-#   -I <dlib header dir>  # if not in default path, set this so #include<dlib/xxx.h> will work
-#   -mavx2                # if your cpu supports it, if you supply this, also supply it when running the makefile in the ../deliver dir
-```
-
-5:  cd to my deliver/ and run the makefile. If you supplied -mavx2, do that again here.  
-    You may also habe to specify -L ...  
+4:  cd to my deliver/ and run the makefile. You MUST specify -DABSOL="..." in MFLAGS to the makefile
 ```
 #example usage, same as when making the library, except you may have to specify where to look to resolve references to dlib:
-#   $ make MFLAGS='-mavx2 -I /home/jw/dlib-19.9 -L /home/jw/dlib-19.9/build/dlib'
+#   $ make MFLAGS='-mavx2 -I /home/jw/dlib-19.9 -L /home/jw/dlib-19.9/build/dlib -DABSOL="/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat"'
 #MFLAGS can be composed of the following:
 #   -I <dlib header dir>  # if not in default path, set this so #include<dlib/xxx.h> will work
 #   -L <libdlib.a dir>
 #   -mavx2                # if your cpu supports it, if you supply this, also supply it when running the makefile in the ../deliver dir
+#MANDATORY:
+#   -DABSOL="/path/to/shape_pred.dat"
 ```
 
 6:  Now you should have an exe 'vidproc.out' built. See top of deliver/main.cpp for how to run it with the right arguments.  
 
 One more thing: have a postgres account with password postgres
 
+(Jonathan): I should have fixed the below, in the source it is now `#include <libpq-fe.h>`, and inside the makefile is ``pkg-config --cflags libpq``  
 MacOS notes: I needed to change the include for the libpq-fe.h from <postgresql/libpq-fe.h> to just <libpq-fe.h> in db.h and when you compile in step 5 you need to add -I /path_to_libpq_include. On my system, this was in /usr/local/Cellar/libpq/10.3/include
