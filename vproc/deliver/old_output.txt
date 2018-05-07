@@ -1,0 +1,129 @@
+/*
+jw@jw-laptop ~/cs160/deliver/bin/release $ ./deliverables /home/jw/Data/mon30.mp4 6
+videoid: 6
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_mon30.mp4
+entering read/process loop
+rect: [640 x 360 from (0, 0)]
+point[0] = (227, 172)
+point[1] = (228, 203)
+point[2] = (232, 233)
+point[3] = (238, 263)
+point[4] = (248, 292)
+point[5] = (263, 318)
+point[6] = (279, 341)
+point[7] = (299, 358)
+point[8] = (326, 363)
+OpenCV Error: One of arguments' values is out of range () in locate, file /home/jw/opencv/opencv-3.3.0/modules/imgproc/src/subdivision2d.cpp, line 288
+terminate called after throwing an instance of 'cv::Exception'
+  what():  /home/jw/opencv/opencv-3.3.0/modules/imgproc/src/subdivision2d.cpp:288: error: (-211)  in function locate
+
+Aborted (core dumped)
+jw@jw-laptop ~/cs160/deli
+*/
+
+/* Before every other frame face detection:
+jw@jw-laptop ~/cs160/deliver/bin/release $ ./deliverables /home/jw/Data/7.mp4 6
+videoid: 6
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+INSERT INTO frame(videoid, framenumber, ftpupilrightx, ftpupilrighty, ftpupilleftx, ftpupillefty, roll, pitch, yaw)VALUES (6, 0, -1, -1, 408, 203, -0.071189, 0.474677, -3.075184) RETURNING frameid
+INSERT INTO openfacedata(pointnumber, x, y, frameid) VALUES (1, 366, 211, 814)
+UPDATE video SET (numframes, framespersecond, width, height) = (40, 17, 640, 480) WHERE videoid = 6
+Everything except most initialization took about 2588 ms
+jw@jw-laptop ~/cs160/deliver/bin/release $ ./deliverables /home/jw/Data/7.mp4 6
+videoid: 6
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+INSERT INTO frame(videoid, framenumber, ftpupilrightx, ftpupilrighty, ftpupilleftx, ftpupillefty, roll, pitch, yaw)VALUES (6, 0, -1, -1, 408, 203, -0.071189, 0.474677, -3.075184) RETURNING frameid
+INSERT INTO openfacedata(pointnumber, x, y, frameid) VALUES (1, 366, 211, 854)
+UPDATE video SET (numframes, framespersecond, width, height) = (40, 17, 640, 480) WHERE videoid = 6
+Everything except most initialization took about 2592 ms
+jw@jw-laptop ~/cs160/deliver/bin/release $ ./deliverables /home/jw/Data/7.mp4 6
+videoid: 6
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+INSERT INTO frame(videoid, framenumber, ftpupilrightx, ftpupilrighty, ftpupilleftx, ftpupillefty, roll, pitch, yaw)VALUES (6, 0, -1, -1, 408, 203, -0.071189, 0.474677, -3.075184) RETURNING frameid
+INSERT INTO openfacedata(pointnumber, x, y, frameid) VALUES (1, 366, 211, 894)
+UPDATE video SET (numframes, framespersecond, width, height) = (40, 17, 640, 480) WHERE videoid = 6
+Everything except most initialization took about 2579 ms
+jw@jw-laptop ~/cs160/deliver/bin/release $ ./deliverables /home/jw/Data/7.mp4 6
+videoid: 6
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+entering read/process loop
+INSERT INTO frame(videoid, framenumber, ftpupilrightx, ftpupilrighty, ftpupilleftx, ftpupillefty, roll, pitch, yaw)VALUES (6, 0, -1, -1, 408, 203, -0.071189, 0.474677, -3.075184) RETURNING frameid
+INSERT INTO openfacedata(pointnumber, x, y, frameid) VALUES (1, 366, 211, 934)
+UPDATE video SET (numframes, framespersecond, width, height) = (40, 17, 640, 480) WHERE videoid = 6
+Everything except most initialization took about 2596 ms
+jw@jw-laptop ~/cs160/deliver/bin/release $
+*/
+
+/* Look at what a difference this makes!
+
+    More optimizations:
+
+    Have it work on the smallest image possible, 2 things:
+    *   Hone in on the face after each detection. When passing
+        an image to the next frame, pass the one cropped to the size of the
+        previous detection, expanded a little, more so in the direction of movement.
+
+    *   Pass a smaller image, and then scale back the returned rectangle,
+        Apparently dlib kinda does this already? The object_detector
+
+jw@jw-laptop ~/cs160/deliver/bin/release $ ./deliverables /home/jw/Data/7.mp4 6
+videoid: 6
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+fps according to opencv: 17
+entering read/process loop
+INSERT INTO frame(videoid, framenumber, ftpupilrightx, ftpupilrighty, ftpupilleftx, ftpupillefty, roll, pitch, yaw)VALUES (6, 0, -1, -1, 408, 203, -0.071189, 0.474677, -3.075184) RETURNING frameid
+INSERT INTO openfacedata(pointnumber, x, y, frameid) VALUES (1, 366, 211, 974)
+UPDATE video SET (numframes, framespersecond, width, height) = (40, 17, 640, 480) WHERE videoid = 6
+Everything except most initialization took about 1462 ms
+jw@jw-laptop ~/cs160/deliver/bin/release $ ./deliverables /home/jw/Data/7.mp4 6
+videoid: 6
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+fps according to opencv: 17
+entering read/process loop
+INSERT INTO frame(videoid, framenumber, ftpupilrightx, ftpupilrighty, ftpupilleftx, ftpupillefty, roll, pitch, yaw)VALUES (6, 0, -1, -1, 408, 203, -0.071189, 0.474677, -3.075184) RETURNING frameid
+INSERT INTO openfacedata(pointnumber, x, y, frameid) VALUES (1, 366, 211, 1014)
+UPDATE video SET (numframes, framespersecond, width, height) = (40, 17, 640, 480) WHERE videoid = 6
+Everything except most initialization took about 1470 ms
+jw@jw-laptop ~/cs160/deliver/bin/release $ ./deliverables /home/jw/Data/7.mp4 6
+videoid: 6
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+fps according to opencv: 17
+entering read/process loop
+INSERT INTO frame(videoid, framenumber, ftpupilrightx, ftpupilrighty, ftpupilleftx, ftpupillefty, roll, pitch, yaw)VALUES (6, 0, -1, -1, 408, 203, -0.071189, 0.474677, -3.075184) RETURNING frameid
+INSERT INTO openfacedata(pointnumber, x, y, frameid) VALUES (1, 366, 211, 1054)
+UPDATE video SET (numframes, framespersecond, width, height) = (40, 17, 640, 480) WHERE videoid = 6
+Everything except most initialization took about 1470 ms
+jw@jw-laptop ~/cs160/deliver/bin/release $ ./deliverables /home/jw/Data/7.mp4 6
+videoid: 6
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+out_7.mp4
+fps according to opencv: 17
+entering read/process loop
+INSERT INTO frame(videoid, framenumber, ftpupilrightx, ftpupilrighty, ftpupilleftx, ftpupillefty, roll, pitch, yaw)VALUES (6, 0, -1, -1, 408, 203, -0.071189, 0.474677, -3.075184) RETURNING frameid
+INSERT INTO openfacedata(pointnumber, x, y, frameid) VALUES (1, 366, 211, 1094)
+UPDATE video SET (numframes, framespersecond, width, height) = (40, 17, 640, 480) WHERE videoid = 6
+Everything except most initialization took about 1473 ms
+jw@jw-laptop ~/cs160/deliver/bin/release $
+
+*/
+

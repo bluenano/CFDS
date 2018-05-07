@@ -1,0 +1,221 @@
+#if 0
+jw@jw-laptop ~/CS160Project/vproc/test $ obs/pj old_bin/vid.avi 6
+video id: 6
+trained file: [/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat]
+vid.avi
+fps according to opencv: 17
+entering read/process loop
+failed to extract frame 40
+failed to extract frame 40
+Everything except most initialization took about 658 ms
+tt vid.avi
+file: old_bin/vid.avi
+vid.avi
+fps according to opencv: 17
+entering read/process loop
+failed to extract frame 40
+failed to extract frame 40
+Everything except most initialization took about 654 ms
+tt vid.avi
+file: old_bin/vid.avi
+vid.avi
+fps according to opencv: 17
+entering read/process loop
+failed to extract frame 40
+failed to extract frame 40
+Everything except most initialization took about 671 ms
+tt vid.avi
+file:
+
+**************** then after cimg small.... but quality not as good...
+    jw@jw-laptop ~/CS160Project/vproc/test $ obs/pj old_bin/vid.avi 6
+video id: 6
+trained file: [/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat]
+vid.avi
+fps according to opencv: 17
+entering read/process loop
+failed to extract frame 40
+failed to extract frame 40
+Everything except most initialization took about 312 ms
+tt vid.avi
+file: old_bin/vid.avi
+vid.avi
+fps according to opencv: 17
+entering read/process loop
+failed to extract frame 40
+failed to extract frame 40
+Everything except most initialization took about 311 ms
+tt vid.avi
+file: old_bin/vid.avi
+vid.avi
+fps according to opencv: 17
+entering read/process loop
+failed to extract frame 40
+failed to extract frame 40
+Everything except most initialization took about 324 ms
+tt vid.avi
+file: old_bin/vid.avi
+vid.avi
+fps according to opencv: 17
+entering read/process loop
+failed to extract frame 40
+failed to extract frame 40
+Everything except most initialization took about 336 ms
+tt vid.avi
+file:
+
+#endif // 0
+
+#if 0//video.webm, with crop
+
+jw@jw-laptop ~/CS160Project/vproc/test $ obs/pj ../../videos/video.webm 6
+video id: 6
+trained file: [/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat]
+OpenCV: FFMPEG: tag 0x00000000/'????' is not supported with codec id 14 and format 'webm / WebM'
+...
+failed to extract frame 203
+face time ms: 2274
+Everything except most initialization took about 3531 ms
+tt video.webm.avi
+file: ../../videos/video.webm
+OpenCV: FFMPEG: tag 0x00000000/'????' is not supported with codec id 14 and format 'webm / WebM'
+...
+failed to extract frame 203
+face time ms: 2275
+Everything except most initialization took about 3516 ms
+tt video.webm.avi
+file: ../../videos/video.webm
+OpenCV: FFMPEG: tag 0x00000000/'????' is not supported with codec id 14 and format 'webm / WebM'
+...
+failed to extract frame 203
+face time ms: 2274
+Everything except most initialization took about 3536 ms
+tt video.webm.avi
+file:
+
+#endif // 0
+
+#if 0 //mon30.mp4, with crop
+jw@jw-laptop ~/CS160Project/vproc/test $ obs/pj ../../videos/mon30.mp4 6
+video id: 6
+trained file: [/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat]
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+mon30.mp4
+opencv info{fps=13, w=640, h=360}
+entering read/process loop
+failed to get face ROI for frame 26
+failed to get face ROI for frame 33
+failed to get face ROI for frame 64
+face time ms: 488
+Everything except most initialization took about 1391 ms
+tt mon30.mp4
+file: ../../videos/mon30.mp4
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+mon30.mp4
+opencv info{fps=13, w=640, h=360}
+entering read/process loop
+failed to get face ROI for frame 26
+failed to get face ROI for frame 33
+failed to get face ROI for frame 64
+face time ms: 454
+Everything except most initialization took about 1411 ms
+tt mon30.mp4
+file: ../../videos/mon30.mp4
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+mon30.mp4
+opencv info{fps=13, w=640, h=360}
+entering read/process loop
+failed to get face ROI for frame 26
+failed to get face ROI for frame 33
+failed to get face ROI for frame 64
+face time ms: 466
+Everything except most initialization took about 1433 ms
+tt mon30.mp4
+file:
+
+#endif // 0
+
+#if 0//testvid.mp4, with crop
+
+jw@jw-laptop ~/CS160Project/vproc/test $ obs/pj ../../videos/testvid.mp4 6
+video id: 6
+trained file: [/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat]
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+testvid.mp4
+opencv info{fps=17, w=640, h=480}
+entering read/process loop
+face time ms: 135
+Everything except most initialization took about 758 ms
+tt testvid.mp4
+file: ../../videos/testvid.mp4
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+testvid.mp4
+opencv info{fps=17, w=640, h=480}
+entering read/process loop
+face time ms: 126
+Everything except most initialization took about 753 ms
+tt testvid.mp4
+file: ../../videos/testvid.mp4
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+testvid.mp4
+opencv info{fps=17, w=640, h=480}
+entering read/process loop
+face time ms: 148
+Everything except most initialization took about 774 ms
+tt testvid.mp4
+file:
+
+#endif // 0
+
+#if 0 // then here is that testvid.mp4, WITHOUT crop, I named the exe weird...
+So crop def an improvement, face time went from 380 (here) -> 140 (above) !
+
+jw@jw-laptop ~/CS160Project/vproc/test $ ./pj_crop ../../videos/testvid.mp4 6
+video id: 6
+trained file: [/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat]
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+testvid.mp4
+fps according to opencv: 17
+entering read/process loop
+face time ms: 387
+Everything except most initialization took about 1008 ms
+tt testvid.mp4
+file: ../../videos/testvid.mp4
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+testvid.mp4
+fps according to opencv: 17
+entering read/process loop
+face time ms: 385
+Everything except most initialization took about 1006 ms
+tt testvid.mp4
+file: ../../videos/testvid.mp4
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+testvid.mp4
+fps according to opencv: 17
+entering read/process loop
+face time ms: 381
+Everything except most initialization took about 999 ms
+tt testvid.mp4
+file: ../../videos/testvid.mp4
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+testvid.mp4
+fps according to opencv: 17
+entering read/process loop
+face time ms: 383
+Everything except most initialization took about 1000 ms
+tt testvid.mp4
+file: ^Z
+[4]+  Stopped                 ./pj_crop ../../videos/testvid.mp4 6
+
+
+#endif // 0
