@@ -1,9 +1,25 @@
+///@TODO: fix pupils now that using crop rec.
+
+/*
+    frames: 01 23 45 67
+            BA
+*/
+
+//why cant get it in same place?
+//and why is it alternating?
+
+
+//cimg small thing accuracy poor, even tried with 2.
+//screw it, and just use pydown<4>
+
 
 //XXX: fallback to handle webm 1000 fps things opencv video capture will go crazy with
 //ffmpeg pipe protocol? or at least original make a bunch of image %d files.
 //
 //For the person doing the database stuff, I put @DB in source code locations in this file and "db.h"
 //to point out things of interest.
+
+///home/jw/CS160Project/videos
 
 /*
 ('X','V','I','D').
@@ -45,11 +61,13 @@ struct PoseEuler
 };
 
 static
-PoseEuler getPoseAndDraw(cv::Mat& im, const lmCoord* marks);
+//PoseEuler getPoseAndDraw(cv::Mat& im, const lmCoord* marks);
+PoseEuler getPoseAndDraw(cv::Mat& im, const PairInt16* marks);
 
 static
 //void drawDelaunay68(cv::Mat& im, const lmCoord* marks, int, int);
-void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks, cv::Rect const rect);
+//void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks, cv::Rect const rect);
+void drawDelaunay68(cv::Mat& im, const PairInt16 (&lndmks)[68], cv::Rect const rect);
 
 template<class T> T Max(T a, T b) { return b>a ? b : a; }
 template<class T> T Min(T a, T b) { return b<a ? b : a; }
@@ -60,70 +78,42 @@ cv::Rect dlibRectangleToOpenCV(const dlib::rectangle& r)
     return cv::Rect(cv::Point2i(r.left(), r.top()), cv::Point2i(r.right() + 1, r.bottom() + 1));
 }
 
-/*
-    These get-Right/Left-Roi functions cut a rectangle using the 68 points
-    gotten from dlib already. The max width and height are taken and expanded a little
-    to be conservative (My assumption is its worse to be too small, instead of too big).
-
-    68 point locations reference:
-    https://stackoverflow.com/questions/42539240/how-to-get-the-length-of-eyes-and-mouth-using-dlib/44483983#44483983
-*/
-
-//left as in looking at the points picture
 static
-cv::Rect getLeftRoi(cv::Size dims, const lmCoord* a)
+cv::Rect getLeftRoi(const VideoMetadata&, const PairInt16*)
 {
-    int const left  = a[36].x();
-    int const width = a[39].x() - left;
-    int const top   = Min(a[37].y(), a[38].y());
-    int const height= Max(a[41].y(), a[40].y()) - top;
-    //for good measure clamp to image:
-    cv::Rect const roi = cv::Rect
-    (
-        Max(left - 1, 0),
-        Max(top - 1, 0),
-        Min(width+2, dims.width),
-        Min(height+2, dims.height)
-    );
-    return roi;
+    return cv::Rect(0,0,0,0);
 }
-/*
-    This is same as above, except
-    36 -> 42
-    39 -> 45
 
-    37 -> 43
-    38 -> 44
-
-    41 -> 47
-    40 -> 46
-*/
 static
-cv::Rect getRightRoi(cv::Size dims, const lmCoord* a)
+cv::Rect getRightRoi(const VideoMetadata&, const PairInt16*)
 {
-    int const left  = a[42].x();
-    int const width = a[45].x() - left;
-    int const top   = Min(a[43].y(), a[44].y());
-    int const height= Max(a[47].y(), a[46].y()) - top;
-    //for good measure clamp to image:
-    cv::Rect const roi = cv::Rect
-    (
-        Max(left - 1, 0),
-        Max(top - 1, 0),
-        Min(width+2, dims.width),
-        Min(height+2, dims.height)
-    );
-    return roi;
+    return cv::Rect(0,0,0,0);
 }
 
 
-cv::Point detectPupilHume(cv::Mat& im, cv::Rect eye)
+cv::Point detectPupilHume(cv::Mat&, cv::Rect)
 {
     return cv::Point(0, 0);
 }
 
-//#include <unistd.h>
-//char g_cwd[2048];
+cv::Rect getCrop(dlib::rectangle dr, const VideoMetadata& dims)
+{
+    cv::Rect r;
+    int const wdex= dr.width()/8u;
+    int const hgtex= dr.height()/8u;
+
+    r.x = Max(0, int(dr.left())-wdex);
+    r.y = Max(0, int(dr.top())-hgtex);
+
+    int const rgt = Min(dims.width-1, int(dr.right())+wdex);//use im dims instead
+    int const bot = Min(dims.height-1, int(dr.bottom())+hgtex);
+
+    r.width = rgt - r.x + 1;
+    r.height = bot - r.y + 1;
+    return r;
+}
+
+#define TEST(...) __VA_ARGS__
 
 static
 int processVideo(const char* vfilename,
@@ -164,7 +154,8 @@ int processVideo(const char* vfilename,
         //int dotpos = (int) voutname.find_last_of('.');
         //if (dotpos >= 0) voutname.resize(dotpos);
         voutname += ".avi";
-        //so if it ends in .webm, will now end in .webm.avi. perhaps change. Anyway, when we show to "customer", test with .avi or .mp4
+        //so if it ends in .webm, will now end in .webm.avi. perhaps change,
+        //but can be good that .webm.avi conveys information was sent back in diff fmt
         if (!vwriter.open(  voutname,
                             877677894.0,//vcap.get(cv::VideoWriter::fourcc()),
                             vdata.fps,
@@ -177,25 +168,41 @@ int processVideo(const char* vfilename,
 
     fprintf(stderr, "%s\n", voutname.c_str());
     db.begin_transaction_ok();
-    cv::Mat im;
-    FrameResults all={};
 
+    cv::Mat im;
+    cv::Mat cropmat;
+
+    const cv::Rect croprec_whole(0, 0, vdata.width, vdata.height);
+
+    cv::Rect croprec_A = croprec_whole;
+    cv::Rect croprec_B = croprec_whole;
+
+    dlib::cv_image< dlib::bgr_pixel > cimg;
+    dlib::rectangle drect_rel2whole;
+    dlib::rectangle drect_rel2crop;
     std::vector<dlib::rectangle> faces;
     dlib::full_object_detection detRes;
+
+
+    FrameResults all={};
+
+    printf("opencv info{fps=%d, w=%d, h=%d}\n", vdata.fps, vdata.width, vdata.height);
     //face detection is the slowest step by far,
     //one of a few optimizations is to not do it every frame
-    printf("fps according to opencv: %d\n", vdata.fps);
-
     const int framesPerFaceDetection = vdata.fps/15u + 1u;
     int faceSkips = 0;
-
+    TEST(unsigned facetime=0;)
     fputs("entering read/process loop\n", stderr);
     unsigned long const start_ms = get_millisecs_stamp();
     char status[4] = {'f','f',' ',0};//[0] is video is good, [1] is db transaction commited succesfully
+
+
     for (int i=0; i < final_nframes; ++i)
     {
         all.frameno = i;//@DB: zero-based
         all.marks68[0] = {-1, -1};
+        all.left_pupil = {-1,-1};
+        all.right_pupil = {-1,-1};
 
         if (!vcap.read(im))
         {
@@ -205,28 +212,45 @@ int processVideo(const char* vfilename,
             fprintf(stderr, "failed to extract frame %d\n", i);
             --final_nframes;
             --i;//then gets inc'd back to same in continue. reuse
+            croprec_B = croprec_A = croprec_whole;
             continue;
         }
 
-        //convert to dlib fmt. this isnt supposed to allocate or copy
-        dlib::cv_image< dlib::bgr_pixel > const cimg(im);
-        //dlib::cv_image<unsigned char> const cimg(im);
-        //more than one face can be detected, so can loop through
-
-        if (--faceSkips < 0)
+        if (--faceSkips < 0)//get a new rect...
         {
-            faces = faceRectFinder.findFaceRects(cimg);
+            TEST(unsigned const t = get_millisecs_stamp();)
+
+            cropmat = im(croprec_B);
+            cimg = cropmat;
+
+            faces = faceRectFinder.findFaceRects(cimg);//either whole image or cropmat
+
+            TEST(facetime += get_millisecs_stamp() - t;)
+
             if (faces.empty())
             {
                 fprintf(stderr, "failed to get face ROI for frame %u\n", i);
                 //faceSkips = 0;
+                croprec_B = croprec_whole;
                 goto Lwrite;
             }
             else
+            {
                 faceSkips = framesPerFaceDetection;
+
+                drect_rel2crop = faces[0];
+                drect_rel2whole = dlib::translate_rect(drect_rel2crop, dlib::point(croprec_B.x, croprec_B.y));//NOT SAME!
+                //I wrote in a notebook to work this out, but hard to put in ASCII
+                croprec_A = croprec_B;
+                croprec_B = getCrop(drect_rel2whole, vdata);
+            }
+        }
+        else
+        {
+            //use previous relative detected rect to previous honing rect
         }
 
-        detRes = markDetector.detectMarks(cimg, faces[0]);
+        detRes = markDetector.detectMarks(cimg, drect_rel2crop);//definately pass same rect got from same cimg
 
         if (detRes.num_parts() != 68)
         {
@@ -234,17 +258,17 @@ int processVideo(const char* vfilename,
         }
         else
         {
-            const lmCoord *const marks = &detRes.part(0);
+            const lmCoord *const marks = &detRes.part(0);//rel 2 crop
             //1: store marks
-            cv::Size const imdims = im.size();
-            int max_x=imdims.width,
-                max_y=imdims.height,
+            int max_x=vdata.width,
+                max_y=vdata.height,
                 min_x=max_x,
                 min_y=max_y;
             for (int i=0; i!=68; ++i)
             {
-                int const x = marks[i].x();
-                int const y = marks[i].y();
+                //marks are rel to the cmig passed to sp()
+                int const x = marks[i].x() + croprec_A.x;//croprec.x; //+ drect_rel2crop.left();
+                int const y = marks[i].y() + croprec_A.y;//croprec.y; //+ drect_rel2crop.top();
                 //shape predictor can apparently give a point outside of the picture...
                 // ^culprit is face_detector, which can give a rectangle that may not be contained it the original image
                 //and you cant insert such a point to ocv's SubDiv2D
@@ -258,37 +282,36 @@ int processVideo(const char* vfilename,
                 all.marks68[i] = { (int16_t)x, (int16_t)y };
             }
 
-            auto leyeRect = getLeftRoi(imdims, marks);
+            auto leyeRect = getLeftRoi(vdata, all.marks68);//THEN THIS IS WRONG
             cv::Point leftEyeCoord = detectPupilHume(im, leyeRect);
 
-            auto reyeRect = getRightRoi(imdims, marks);
+            auto reyeRect = getRightRoi(vdata, all.marks68);//THEN THIS IS WRONG
             cv::Point rightEyeCoord = detectPupilHume(im, reyeRect);
 
-            drawDelaunay68(im, marks, {min_x, min_y, max_x-min_x+1, max_y-min_y+1});//do after pupil detection
-            cv::rectangle(im, dlibRectangleToOpenCV(faces[0]), CV_RGB(255, 255, 0), 2);//thickness
-            all.rotation = getPoseAndDraw(im, marks).e;//2: store Euler angles. discard translation...
-
-            auto const valid=[](cv::Point p, cv::Size dim){
-                return p.x>=0 && p.x<dim.width && p.y>=0 && p.x<dim.height;
+            drawDelaunay68(im, all.marks68, {min_x, min_y, max_x-min_x+1, max_y-min_y+1});//do after pupil detection
+            //AND HERE
+            cv::rectangle(im, dlibRectangleToOpenCV(drect_rel2whole), CV_RGB(255, 255, 0), 2);//thickness
+            cv::rectangle(im, croprec_A, CV_RGB(255, 69, 0), 2);
+            all.rotation = getPoseAndDraw(im, all.marks68).e;//2: store Euler angles. discard translation...
+            ///@TODO: above needs PAir16 param change
+            auto const valid=[&vdata](cv::Point p){
+                return p.x>=0 && p.x<vdata.width && p.y>=0 && p.x<vdata.height;
             };//end lambda
             //3: store pupils
             //I was drawing them before. If the video is good quality,
             //the persons face is close to the camera and not moving much then it looks good.
             //If not, its too imprecise and is detracting.
             //Regardless, the FrameResults get filled, and that gets sent to where it needs to go.
-            if (valid(leftEyeCoord, imdims)) {
+            if (valid(leftEyeCoord)) {
                 //cv::circle(im, leftEyeCoord, 3, CV_RGB(255, 255, 0), CV_FILLED, CV_AA, 0);
                 all.left_pupil = {int16_t(leftEyeCoord.x), int16_t(leftEyeCoord.y)};
-            } else
-                all.left_pupil = {-1,-1};
+            }
             //same as above, but for right
-            if (valid(rightEyeCoord, imdims)) {
+            if (valid(rightEyeCoord)) {
                 //cv::circle(im, rightEyeCoord, 3, CV_RGB(255, 255, 0), CV_FILLED, CV_AA, 0);
                 all.right_pupil = {int16_t(rightEyeCoord.x), int16_t(rightEyeCoord.y)};
-            } else
-                all.right_pupil = {-1,-1};
+            }
         }//end if have 68 points
-
     Lwrite: //put stuff in db for random access and size consistency,
             //expecting few errors, and successes (common case) will put data for every frame.
         status[0]='t';
@@ -306,6 +329,8 @@ int processVideo(const char* vfilename,
 
     if (db.end_transaction_ok())
         status[1] = 't';
+
+    TEST(printf("face time ms: %u\n", facetime);)
 
     unsigned long const stop_ms = get_millisecs_stamp();
     printf("Everything except most initialization took about %u ms\n", unsigned(stop_ms-start_ms));
@@ -341,6 +366,9 @@ int main(int argc, char **argv)
         daemon = true;
         if (argc==2)
             trained = argv[1];
+
+        puts("daemon not supported in test");
+        return 1;
     }
     else
     {
@@ -354,8 +382,10 @@ int main(int argc, char **argv)
 
         if (argc==4)
             trained = argv[3];
-    }
 
+    }
+    (void)daemon;
+    printf("video id: %d\n", videoid);
     DataBase db;
     db.connect_ok();
 
@@ -363,19 +393,23 @@ int main(int argc, char **argv)
     DLibLandMarkDetector markDetector;
 
     faceRectFinder.init();
-
+    printf("trained file: [%s]\n", trained);
     if (markDetector.init(trained)!=0)//I made it print too...
         return -1;
 
-
+    std::string stdstr;
     char buf[128];
-    while (fgets(buf, 128, stdin)!=nullptr)
-    {
+    strcpy(buf, argv[1]);
+
+    do{
         processVideo(buf, stdstr, videoid, faceRectFinder, markDetector, db);
-    }
+        putchar('\n');
+    }while (fputs("file: ", stdout), scanf("%s", (char *)buf)==1);
 
     return 0;
 }
+
+
 
 //"/tmp/myserver.sock"
 
@@ -384,7 +418,8 @@ int main(int argc, char **argv)
     ^ so can face_predictor
     And subdiv will throw an error on insert
 */
-void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks, cv::Rect const rect)
+void drawDelaunay68(cv::Mat& im, const PairInt16 (&lndmks)[68], cv::Rect const rect)
+//void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks, cv::Rect const rect)
 //void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks, int max_x, int max_y)
 {
     //cv::Size const dims = im.size();
@@ -394,7 +429,7 @@ void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks, cv::Rect const rect)
 	//std::cout << "rect: "<< rect <<'\n';
 	for (unsigned i=0; i!=68; ++i)
 	{
-		lmCoord const dpt = lndmks[i];
+		PairInt16 const dpt = lndmks[i];
 		//std::cout<<"point["<<i<<"] = " << dpt << '\n';
 		subdiv.insert(
             {
@@ -423,12 +458,13 @@ void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks, cv::Rect const rect)
     //do this after so points are on top of triangle edges, I think looks nicer
     for (unsigned i=0; i!=68; ++i)
 	{
-		lmCoord const dpt = lndmks[i];//TODO, change radius based on dims
+		PairInt16 const dpt = lndmks[i];
 		cv::circle(im, cv::Point(dpt.x(), dpt.y()), 2, cv::Scalar(0, 0, 255), CV_FILLED, CV_AA, 0);
 	}
 }
 
-static inline
+
+inline
 cv::Point2d lmc2cv2d(const lmCoord v)
 {
     return cv::Point2d(v.x(), v.y());
@@ -472,18 +508,22 @@ EulerAnglesF32 AxisAngle2Euler(const cv::Vec3d& axis_angle)
 }
 
 extern
-PoseEuler getPoseAndDraw(cv::Mat& im, const lmCoord* marks)
+PoseEuler getPoseAndDraw(cv::Mat& im, const PairInt16* marks)
 {
     using namespace cv;
 
+    auto const small_to_cvPoint2d = [](PairInt16 a){
+        return cv::Point2d(a.x(), a.y());
+    };
+
     const std::array<Point2d, 6> image_points =
     {{
-        lmc2cv2d(marks[30]),//Nose tip
-        lmc2cv2d(marks[ 8]),//Bottom of Chin
-        lmc2cv2d(marks[36]),//Left eye left corner
-        lmc2cv2d(marks[45]),//Right eye right corner
-        lmc2cv2d(marks[48]),//Right mouth corner
-        lmc2cv2d(marks[54])
+        small_to_cvPoint2d(marks[30]),//Nose tip
+        small_to_cvPoint2d(marks[ 8]),//Bottom of Chin
+        small_to_cvPoint2d(marks[36]),//Left eye left corner
+        small_to_cvPoint2d(marks[45]),//Right eye right corner
+        small_to_cvPoint2d(marks[48]),//Right mouth corner
+        small_to_cvPoint2d(marks[54])
     }};
 
     for (Point2d const point : image_points)
@@ -526,3 +566,4 @@ PoseEuler getPoseAndDraw(cv::Mat& im, const lmCoord* marks)
 
     return PoseEuler{/*translation_vector, */AxisAngle2Euler(rotation_vector)};
 }
+

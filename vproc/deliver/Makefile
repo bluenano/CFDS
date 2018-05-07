@@ -30,5 +30,5 @@ hume.o : hume.cpp
 ../library/pch.h.gch : ../library/pch.h
 		g++ $(MFLAGS) -O2 -s -std=c++11 -Wall -Wextra -Winvalid-pch -c ../library/pch.h -o ../library/pch.h.gch
 
-#make MFLAGS='-mavx2 -L /home/jw/dlib-19.9/build/dlib -DABSOL="/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat"'
+#make MFLAGS='-mavx2 -DABSOL="/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat"'
 
