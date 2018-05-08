@@ -52,7 +52,10 @@ app.controller('uploadCtrl', function($scope, $http)
 
         request.onreadystatechange = function() {
             if (request.readyState == XMLHttpRequest.DONE) {
-                console.log(request.responseText);
+                var result = JSON.parse(request.responseText);
+                if (result.success == true) {
+                    window.location.href = "/cs160/test/home.html";
+                }
             }
         }
 
@@ -106,8 +109,6 @@ app.controller('loginCtrl', function($scope, $http) {
 
         var dataArray = {username, password};
 
-        console.log("Testing");
-
         $.ajax({
                 type:"POST",
                 url: "api/scripts/login.php",
@@ -116,11 +117,25 @@ app.controller('loginCtrl', function($scope, $http) {
                 success: function(data) 
                 {
                     var result = JSON.parse(data);
-                    console.log(data);
 
                     if(result.success == true)
                     {
-                        window.location.href = "/cs160/test/home.html";
+                        localStorage.setItem("userid", result.userid);
+                        console.log(localStorage.getItem("userid")); 
+                        $.ajax({
+                            type:"GET",
+                            url: "api/video/read_all",
+                            data: {userid: localStorage.getItem("userid")},
+                            cache:false,
+                            success: function(videoJSON) {
+                                
+                                for (i = 0; i < videoJSON.length; i++) {
+                                    localStorage.setItem(i, videoJSON[i]["videoid"]);
+                                    console.log(localStorage.getItem(i));
+                                }
+                                //window.location.href = "/cs160/test/home.html";
+                            }
+                        });                       
                     }
                     else
                     {

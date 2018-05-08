@@ -29,7 +29,6 @@ if (is_null($videos)) {
 }
 
 $video_arr = array();
-var_dump($videos);
 for ($i = 0; $i < count($videos); $i++) {
     $video_id = $videos[$i]['videoid'];
     $title = $videos[$i]['title'];
