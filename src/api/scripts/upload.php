@@ -65,6 +65,7 @@ exec($process_video);
 
 
 if (!file_exists($file_name)) {
+    //remove_video(connect(), $video_id); 
     exit_script_on_failure("PROCESSING_ERROR");
 }
 

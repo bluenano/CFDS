@@ -200,6 +200,18 @@ function query_video_paths($conn, $user_id) {
 }
 
 
+function query_frame_ids($conn, $video_id) {
+    try {
+        $stmt = $conn->prepare('SELECT frameid FROM frame WHERE videoid = :id');
+        $stmt->bindParam(':id', $video_id, PDO::PARAM_INT);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return ($results) ? $results : null;
+    } catch (PDOException $e) {
+        return null;
+    }
+}
+
 function is_unique_name($conn, $user_name) {
     try {
         $stmt = $conn->prepare('SELECT username FROM userinfo WHERE username = :username');
@@ -262,6 +274,28 @@ function remove_video($conn, $video_id) {
     try {
         $stmt = $conn->prepare('DELETE FROM video WHERE videoid = :id');
         $stmt->bindParam(':id', $video_id, PDO::PARAM_INT);
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        return FALSE;
+    }
+}
+
+
+function remove_frame($conn, $frame_id) {
+    try {
+        $stmt = $conn->prepare('DELETE FROM frame WHERE frameid = :id');
+        $stmt->bindParam(':id', $frame_id, PDO::PARAM_INT);
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        return FALSE;
+    }
+}
+
+
+function remove_openface_data($conn, $frame_id) {
+    try {
+        $stmt = $conn->prepare('DELETE FROM openfacedata WHERE frameid = :id');
+        $stmt->bindParam(':id', $frame_id, PDO::PARAM_INT);
         return $stmt->execute();
     } catch (PDOException $e) {
         return FALSE;

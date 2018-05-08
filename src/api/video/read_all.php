@@ -1,15 +1,17 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
+    
 
 include_once '../shared/database.php';
 include_once '../shared/utilities.php';
 
-if (count($argv) != 2) {
-    exit_script_on_failure("USAGE_ERROR");
+if (!isset($_GET['userid'])) {
+    exit_script_on_failure('GET_FAILURE');
 }
 
-$user_id = $argv[1];
+$user_id = $_GET['userid'];
+
 $conn = connect();
 if (is_null($conn)) {
    //|| 
@@ -22,16 +24,16 @@ if (is_null($conn)) {
 // adhere to REST because the request body should contain 
 // all the info needed to complete the request
 $videos = query_videos($conn, $user_id);
-
 if (is_null($videos)) {
     exit_script_on_failure("No videos found");
 }
 
 $video_arr = array();
+var_dump($videos);
 for ($i = 0; $i < count($videos); $i++) {
-    $video_id = $videos[0]['videoid'];
-    $title = $videos[0]['title'];
-    $upload_date = $videos[0]['uploaddate'];
+    $video_id = $videos[$i]['videoid'];
+    $title = $videos[$i]['title'];
+    $upload_date = $videos[$i]['uploaddate'];
     $video = array('videoid' => $video_id,
                     'title' => $title,
                     'uploaddate' => $upload_date);

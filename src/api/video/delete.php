@@ -6,26 +6,35 @@
 include_once '../shared/database.php';
 include_once '../shared/utilities.php';
 
-if (count($argv) != 2) {
-    exit_script_on_failure("USAGE_ERROR");
+
+
+if (!isset($_GET['videoid'])) {
+    exit_script_on_failure('GET_FAILURE');
 }
 
-// video id is passed from controller
-$video_id = $argv[1];
+$video_id = $_GET['videoid'];
 
 $conn = connect();
 if (is_null($conn)) {
     exit_script_on_failure("CONNECTION_ERROR");
 }
+$path = query_video_path($conn, $video_id);
+
+$frame_ids = query_frame_ids($conn, $video_id);
+for ($i = 0; $i < count($frame_ids); $i++) {
+    $frame_id = $frame_ids[$i]['frameid'];
+    if (!remove_openface_data($conn, $frame_id)
+        ||
+        !remove_frame($conn, $frame_id)) {
+        exit_script_on_failure("DATABASE_ERROR");
+    }
+}
 
 
-// delete from db
 if (!remove_video($conn, $video_id)) {
     exit_script_on_failure("DELETE_ERROR");
 }
 
-// delete from video directory
-$path = query_video_path($conn, $video_id);
 unlink($path);
 
 echo json_encode(array('success' => TRUE));

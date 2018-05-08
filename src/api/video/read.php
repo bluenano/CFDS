@@ -5,11 +5,12 @@ include_once '../shared/database.php';
 include_once '../shared/utilities.php';
 
 
-if (count($argv) != 2) {
-    exit_script_on_failure("USAGE_ERROR");
+if (!isset($_GET['videoid'])) {
+    exit_script_on_failure('GET_FAILURE');
 }
 
-$video_id = $argv[1];
+$video_id = $_GET['videoid'];
+
 
 $conn = connect();
 if (is_null($conn)) {
