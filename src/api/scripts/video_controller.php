@@ -1,7 +1,6 @@
 <?php
 // implement a controller that handles the different
-// api requests involving reading or deleting a video
-// read, delete 
+// requests involving reading or deleting a video
 
 include_once '../shared/utilities.php';
 
@@ -10,13 +9,14 @@ include_once '../shared/utilities.php';
 // for read: user_id is sent
 // for delete: video_id is sent maybe user_id should be sent too
 
-if (!isset($_POST['json'])) {
-    exit_script_on_failure('POST_FAILURE');
+if (!isset($_GET['op'])
+    ||
+    !isset($_GET['id'])) {
+    exit_script_on_failure('GET_FAILURE');
 }
 
-$json = json_decode($_POST['json']);
-$operation = $json['operation'];
-$id = $json['id'];
+$operation = $_GET['op'];
+$id = $_GET['id'];
 
 
 if (str_cmp($operation, "read")) {
