@@ -59,7 +59,7 @@ $insert_into_db = "php ../video/create.php $user_id $file_name $uploads_file";
 exec($insert_into_db, $output);
 
 $video_id = (int) $output[0];
-$process_video = "./vidproc.out $uploads_file $video_id";
+$process_video = "./vidproc.out $uploads_file $video_id 2> test.txt";
 exec($process_video);
 // add error handling by checking exit code?
 

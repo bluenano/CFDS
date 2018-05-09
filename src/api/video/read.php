@@ -1,6 +1,7 @@
 <?php
 // send a video file to the client to be displayed
 
+include_once '../../../config.php';
 include_once '../shared/database.php';
 include_once '../shared/utilities.php';
 
@@ -17,21 +18,23 @@ if (is_null($conn)) {
     exit_script_on_failure("CONNECTION_ERROR");
 }
 
-$file = query_video_path($conn, $video_id);
-if (is_null($file)) {
+$file_path = query_video_path($conn, $video_id);
+if (is_null($file_path)) {
     exit_script_on_failure("FILE_ERROR");
 }
 
+$file_name = basename($file_path);
+$play_dir = SITE_ROOT . '/test/';
+$play_file = $play_dir . $file_name;
+if (!copy($file_path, $play_file)) {
+    exit_script_on_failure("COPY_ERROR");
+}
 
-$path_info = pathinfo($file);
-$ext = $path_info['extension'];
 
-header("Content-Type: video/$ext");
-header("Content-Length: " . filesize($file));
-// using the path, send the file to the frontend
+if (!rename($play_file, $play_dir . 'currentVideo')) {
+    exit_script_on_failure("COPY_ERROR");
+}
 
-if (!readfile($file)) {
-    exit_script_on_failure("TRANSFER_ERROR");
-}    
+echo json_encode(array('success' => TRUE));
 
 ?>
