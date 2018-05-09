@@ -154,13 +154,13 @@ app.controller('homeCtrl', function($scope)
 {   
     $.ajax({
         type:"GET",
-        url: "api/video/read_all",
+        url: "api/video/read_all.php",
         data: {userid: sessionStorage.getItem("userid")},
         cache:false,
         success: function(videoJSON) 
         {
 
-        for (i = 0; i < videoJSON.length; i++) 
+        for (i = 0; i < videoJSON.length && i < 10; i++) 
         {
             console.log(videoJSON[i]);
             var videoid = videoJSON[i]["videoid"];
@@ -170,19 +170,93 @@ app.controller('homeCtrl', function($scope)
             sessionStorage.setItem((i+1).toString(), videoid.toString());
             var temp1 = title + ' ';
             var temp2 = uploaddate + ' ';
-            var temp3 = videoid + ' ';
+            var temp3 = videoid;
 
+            var result = temp1 + " " + temp2;
 
+            document.getElementById(i + 1).innerHTML = temp1;
+            document.getElementById(i + 1.1).innerHTML = temp2;
+            var num1 = i + 1.2;
+            var num2 = i + 1.3;
+            num1 = num1.toString();
+            num2 = num2.toString();
+            document.getElementById(i + 1.2).innerHTML = "<th><button id =" + num1 + " type ='button' class='btn btn-success' >Play</button>";
+            document.getElementById(i + 1.3).innerHTML = "<button id=" + num2 + " type ='button' class='btn btn-danger' >Delete</button></th>";
 
+            var videoINeedToPlay = i + 1; 
+            var videoINeedToDelete = i + 1;
+
+            console.log(videoINeedToPlay);
+            console.log(videoINeedToDelete);
+
+            document.getElementById(i + 1.2).addEventListener("click", function()
+            {
+                
+                //Function to play
+                $.ajax({
+                    type:"GET",
+                    url:"api/video/read.php",
+                    data: {userid: videoINeedToPlay},
+                    cache: false,
+                    success: function(data) 
+                    {
+                        window.location.href = "/cs160/test/videoPlayer.html";
+                    }
+                });
+
+            });
+            document.getElementById(i + 1.3).addEventListener("click", function()
+            {
+            
+                //Function to delete
+                $.ajax({
+                    type:"GET",
+                    url:"api/video/delete.php",
+                    data: {userid: videoINeedToDelete},
+                    cache: false,
+                    success: function(data) 
+                    {
+                        window.location.href = "/cs160/test/home.html";
+                    }
+                });
+
+            });
 
         }
                                 
         }
+
     }); 
+
 
     $scope.upload = function() {
         window.location.href = "/cs160/test/upload.html";
     }
 
+    $scope.logout = function ()
+    {
+        $.ajax({
+            type:"GET",
+            url: "api/scripts/logout.php",
+            data: {userid: sessionStorage.getItem("userid")},
+            cache: false,
+            success: function(data) {
+                window.location.href = "/cs160/test/login.html";
+            } 
+
+            });
+
+    }
+
 });
+
+
+
+
+
+
+
+
+
+
 
