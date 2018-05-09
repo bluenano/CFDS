@@ -1,74 +1,117 @@
 /*
-    If its run from php, I geuss it puts it in the dir of the php script... IDK
+    @sean: here is sample output and commands.
+    ran this manually, but tested calling from php too.
+    also, see my vproc/deldata.php, which has a function that can be called
+    to delete the corresponding file.
 
-	This takes a video file name, and outputs a processed one
-	in the directory of this executable. The processed video name is returned in the status string.
+jw@jw-laptop ~/CS160Project/bin $ ./vidproc.out ../videos/testvid.mp4 888
+OpenCV: FFMPEG: tag 0x31637661/'avc1' is not supported with codec id 28 and format 'mp4 / MP4 (MPEG-4 Part 14)'
+OpenCV: FFMPEG: fallback to use tag 0x00000021/'!???'
+processing file:
+../videos/testvid.mp4
+with video id: 888
+Opening "wb":
+  [/home/jw/Sites/cs160/vdata/vdata_888.dat]
+opencv info{fps=17, w=640, h=480}
+Entering read/process/write loop...
+file filled and closed successfully
+face time ms: 130
+Everything except most initialization took about 804 ms
+tt testvid.mp4jw@jw-laptop ~/CS160Project/bin $ #look at video
+jw@jw-laptop ~/CS160Project/bin $ cd ../vproc/fs
+jw@jw-laptop ~/CS160Project/vproc/fs $ ./fs.out #NO ARGS... i may change this
+enter a file to inspect: /home/jw/Sites/cs160/vdata/vdata_888.dat
+looking for file:
+  [/home/jw/Sites/cs160/vdata/vdata_888.dat]
+nframes: 40,
+fps: 17,
+w: 640,
+h: 480
+enter a valid 0-indexed frame to inspect, i for next sequential, or q to break
+>> i
+364,213 365,236 371,259 377,282 385,307 398,329 417,347 439,362
+465,365 491,361 515,346 534,328 549,305 557,280 561,255 564,228
+563,203 372,192 381,177 398,173 417,174 434,180 464,175 484,166
+506,162 528,166 544,180 450,198 451,220 451,242 451,264 436,273
+444,277 454,280 465,276 474,271 390,208 400,202 413,201 426,206
+414,210 401,212 482,203 495,195 509,194 521,199 510,204 496,204
+422,305 433,299 446,295 457,298 468,294 483,297 497,301 484,314
+470,319 458,321 446,320 434,315 426,305 446,304 457,306 469,303
+491,302 469,304 458,307 446,305
+   ... are the (x,y) 68 landmark coords.
+left:  {408, 203}
+right: { -1,  -1}
+y,p,r: {-3.058731, 0.433284, -0.073931}
+>> q
+enter a file to inspect: ^Z
+[1]+  Stopped                 ./fs.out
+jw@jw-laptop ~/CS160Project/vproc/fs $
+
+*/
+
+/*
+    For @Bruce: I commented parts of interest with @Requirement
+    that you can search for if that helps.
+
+    Type make in this directory to build,
+    after installing necessary components.
+    See the README for how to get those: ffmpeg, opencv, and dlib.
+
+	This exe takes a video file name, and outputs a processed one
+	in the directory of this executable, or where it may be called from php.
+	The processed video name is returned in the status string.
 	The status could be something like this:
         tt hello.mp4
     The first char ([0]) is 't' if a video was successfully made.
-    The second char ([1]) is 't' if there was a successful transaction commit to the database.
+    The second char ([1]) is 't' if there was a successful full write of all the video data to the file:
+        ~/Sites/cs160/vdata/vdata_123.dat
+    (where 123 would be the video id).
     Then there is a space, followed by the output video name relative to this exe's working dir.
     (it might be different then the input if it has to be encoded differently)
 
-	The video id must also be supplied and it must be a valid reference
-	to something already inserted in the table.
-	This will update the row with the metadata, after this process has inserted
-	all the other stuff. (though if anything fails, nothing is put anywhere, rollback).
+	The video id must also be supplied.
 
 	This can be run two ways:
 
 	1:	Just run once, then process ends.
 		The format for that is:
 			<exe.out> <video_file> <videoid> [shape_predictor trained file]
-		The shape predictor arg is optional, defaults to shape_predictor_68_face_landmarks.dat (working dir)
+		The shape predictor arg is optional, and can be supplied for backwards compat, but should build this with -DABSOL
 			$ ./vidproc.out /tmp/testvid.mp4 6
 		You can also run this from a php script, see php_exec.php for an example.
 
-	2:	Make this process run indefinately, doing initialization only once. This can an improvement
+	2:	Make this process run indefinitely, doing initialization only once. This can an improvement
 		if using plain cgi. Once this is running as a daemon, it waits for AF_UNIX datagrams.
-		Those packets should be a string comprised of a video file name concatenated with a space, then a video id as text.
+		Those packets should be a string comprised of an
+		ABSOLUTE video file name concatenated with a space, then a video id as text.
 		See php_af_unix.php for an example. Before you run that though, you need to run this in daemon mode:
 			$ ./vidproc.out
-		You can also supply the shape_predictor thing if it is not in the working dir of this exe.
-*/
-
-
-//XXX: fallback to handle webm 1000 fps things opencv video capture will go crazy with
-//ffmpeg pipe protocol? or at least original make a bunch of image %d files.
-//
-//For the person doing the database stuff, I put @DB in source code locations in this file and "db.h"
-//to point out things of interest.
-
-/*
-('X','V','I','D').
-.avi
-http://answers.opencv.org/question/66545/problems-with-the-video-writer-in-opencv-300/
 */
 
 #include "../library/pch.h"
-#include "db.h"
+#include "../fs/fs.h"
+#include "util.h"
 
-#define STRINGIFY(a) #a
-#define STR_UNWRAPPED(a) STRINGIFY(a)
-
-#define ABSOL_STR STR_UNWRAPPED(ABSOL)
+//#make MFLAGS='-mavx2 -DABSOL="/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat"'
 
 #ifndef TRAINED_FILE
-    #define TRAINED_FILE STR_UNWRAPPED(ABSOL)
+    #ifdef ABSOL
+        #define TRAINED_FILE STRINGIFY(ABSOL)
+    #else
+    #warn ABSOL not defined, using cwd
+        #define TRAINED_FILE "/home/jw/CS160Project/data/shape_predictor_68_face_landmarks.dat"
+    #endif // ABSOL
 #endif
-
 
 //good compromise of speed and accuracy for
 //webcam style videos, with a single large face
 typedef DLibFaceDetectorPyDown<4> DLibFaceDetector;
 
-typedef dlib::point lmCoord;//landmark coordinate pair
-
 //The format returned is [Tx, Ty, Tz, Eul_x, Eul_y, Eul_z]
 struct PoseEuler
 {
     //cv::Vec3d trans; //And I just discard this.
-    EulerAnglesF32 e;//yaw pitch and roll
+    EulerAnglesF32 e;//yaw pitch and roll, defined in fs.h
 };
 
 static
@@ -143,6 +186,8 @@ cv::Rect getRightRoi(const VideoMetadata& dims, const PairInt16* a)
     return roi;
 }
 
+//expand previously detected rect returned by face_detector()
+//by 1/8 on each side for both dimensions
 cv::Rect getCrop(dlib::rectangle dr, const VideoMetadata& dims)
 {
     cv::Rect r;
@@ -152,7 +197,7 @@ cv::Rect getCrop(dlib::rectangle dr, const VideoMetadata& dims)
     r.x = Max(0, int(dr.left())-wdex);
     r.y = Max(0, int(dr.top())-hgtex);
 
-    int const rgt = Min(dims.width-1, int(dr.right())+wdex);//use im dims instead
+    int const rgt = Min(dims.width-1, int(dr.right())+wdex);
     int const bot = Min(dims.height-1, int(dr.bottom())+hgtex);
 
     r.width = rgt - r.x + 1;
@@ -163,15 +208,14 @@ cv::Rect getCrop(dlib::rectangle dr, const VideoMetadata& dims)
 extern//hume.cpp
 cv::Point detectPupilHume(cv::Mat& im, cv::Rect eye);
 
-#define TEST(...)
+#define TEST(...) __VA_ARGS__
 
 static
 int processVideo(const char* vfilename,
                  std::string& outsref,
-                 unsigned videoid,
+                 int videoid,
                  DLibFaceDetector& faceRectFinder,
-                 const DLibLandMarkDetector& markDetector,
-                 DataBase& db)
+                 const DLibLandMarkDetector& markDetector)
 {
     cv::VideoCapture vcap(vfilename);
     if (!vcap.isOpened())
@@ -186,9 +230,7 @@ int processVideo(const char* vfilename,
     vdata.fps     = vcap.get(CV_CAP_PROP_FPS);
     vdata.width   = vcap.get(CV_CAP_PROP_FRAME_WIDTH);
     vdata.height  = vcap.get(CV_CAP_PROP_FRAME_HEIGHT);
-    int final_nframes = vdata.nframes;
     //fprintf(stderr, "%lf\n", vcap.get(CV_CAP_PROP_FOURCC));
-    //const int bDumpData = ! isatty(1);
 
     const char * slash = strrchr(vfilename, '/');//reverse
     cv::String voutname = (slash==nullptr ? vfilename : slash+1);
@@ -199,13 +241,13 @@ int processVideo(const char* vfilename,
                             cv::Size(vdata.width, vdata.height));
     if (!vwriter.isOpened())
     {
-        //trying this is better than nothing
+        //Trying this is better than nothing.
         fprintf(stderr, "failed create video writer in uploaded format,\nattempting to convert to avi\n");
-        //int dotpos = (int) voutname.find_last_of('.');
-        //if (dotpos >= 0) voutname.resize(dotpos);
         voutname += ".avi";
-        //so if it ends in .webm, will now end in .webm.avi. perhaps change,
+        //Note:
+        //So if it ends in .webm, will now end in .webm.avi. perhaps change,
         //but can be good that .webm.avi conveys information was sent back in diff fmt
+        //this is way the output video name is in the status string.
         if (!vwriter.open(  voutname,
                             877677894.0,//vcap.get(cv::VideoWriter::fourcc()),
                             vdata.fps,
@@ -216,15 +258,20 @@ int processVideo(const char* vfilename,
         }
     }
 
-    fprintf(stderr, "%s\n", voutname.c_str());
-    db.begin_transaction_ok();
+    printf("processing file:\n%s\nwith video id: %d\n", vfilename, videoid);
+    VideoDataFiler db;
+    //if theres an error, a flag is set, and everything else is a noop
+    //either everything goes in, or nothing. a 'rollback' is deleting the file.
+    //status is returned in [1], 't' means OK
+    db.begin_transaction_ok(videoid);
+    db.write_header_ok(vdata);
 
     cv::Mat im;
     cv::Mat cropmat;
 
     const cv::Rect croprec_whole(0, 0, vdata.width, vdata.height);
 
-    cv::Rect croprec_A = croprec_whole;
+    cv::Rect croprec_A;
     cv::Rect croprec_B = croprec_whole;
 
     dlib::cv_image< dlib::bgr_pixel > cimg;
@@ -232,7 +279,6 @@ int processVideo(const char* vfilename,
     dlib::rectangle drect_rel2crop;
     std::vector<dlib::rectangle> faces;
     dlib::full_object_detection detRes;
-
 
     FrameResults all={};
 
@@ -242,46 +288,41 @@ int processVideo(const char* vfilename,
     const int framesPerFaceDetection = vdata.fps/15u + 1u;
     int faceSkips = 0;
     TEST(unsigned facetime=0;)
-    fputs("entering read/process loop\n", stderr);
+    fputs("Entering read/process/write loop...\n", stderr);
     unsigned long const start_ms = get_millisecs_stamp();
-    char status[4] = {'f','f',' ',0};//[0] is video is good, [1] is db transaction commited succesfully
+    char status[4] = {'f','f',' ',0};//[0] is video is good, [1] is file transaction
 
+    int cvfails = 0;
 
-    for (int i=0; i < final_nframes; ++i)
+    for (int i=0; i < vdata.nframes; ++i)
     {
-        all.frameno = i;//@DB: zero-based
         all.marks68[0] = {-1, -1};
         all.left_pupil = {-1,-1};
         all.right_pupil = {-1,-1};
 
         if (!vcap.read(im))
         {
-            //if this happens (unlikely if VideoCap opened successfully),
-            //smush the video
-            //@DB this is where final frames in output may not match input
-            fprintf(stderr, "failed to extract frame %d\n", i);
-            --final_nframes;
-            --i;//then gets inc'd back to same in continue. reuse
+            fprintf(stderr, "failed to extract frame (i: %d - prev_vcap_fails: %d)\n", i, cvfails++);
             croprec_B = croprec_A = croprec_whole;
             continue;
         }
 
-        if (--faceSkips < 0)//get a new rect...
+        if (--faceSkips < 0)//get a new detected rect
         {
             TEST(unsigned const t = get_millisecs_stamp();)
 
             cropmat = im(croprec_B);
             cimg = cropmat;
 
-            faces = faceRectFinder.findFaceRects(cimg);//either whole image or cropmat
+            faces = faceRectFinder.findFaceRects(cimg);
 
             TEST(facetime += get_millisecs_stamp() - t;)
 
             if (faces.empty())
             {
-                fprintf(stderr, "failed to get face ROI for frame %u\n", i);
-                //faceSkips = 0;
-                croprec_B = croprec_whole;
+                fprintf(stderr, "failed to get face ROI for frame i: %d, prev_vcap_fails: %d\n", i, cvfails);
+                croprec_B = croprec_whole;                              //don't inc here, not a vcap problem
+                //faceSkips = 0;// signed and < compare
                 goto Lwrite;
             }
             else
@@ -289,18 +330,18 @@ int processVideo(const char* vfilename,
                 faceSkips = framesPerFaceDetection;
 
                 drect_rel2crop = faces[0];
-                drect_rel2whole = dlib::translate_rect(drect_rel2crop, dlib::point(croprec_B.x, croprec_B.y));//NOT SAME!
-                //I wrote in a notebook to work this out, but hard to put in ASCII
+                drect_rel2whole = dlib::translate_rect(drect_rel2crop, dlib::point(croprec_B.x, croprec_B.y));
+
                 croprec_A = croprec_B;
                 croprec_B = getCrop(drect_rel2whole, vdata);
             }
         }
         else
         {
-            //use previous relative detected rect to previous honing rect
+            //use previous crop and face detection
         }
 
-        detRes = markDetector.detectMarks(cimg, drect_rel2crop);//definately pass same rect got from same cimg
+        detRes = markDetector.detectMarks(cimg, drect_rel2crop);//definitely pass same rect got from same cimg
 
         if (detRes.num_parts() != 68)
         {
@@ -308,8 +349,7 @@ int processVideo(const char* vfilename,
         }
         else
         {
-            const lmCoord *const marks = &detRes.part(0);//rel 2 crop
-            //1: store marks
+            const dlib::point *const marks = &detRes.part(0);//rel 2 crop
             int max_x=vdata.width,
                 max_y=vdata.height,
                 min_x=max_x,
@@ -317,41 +357,35 @@ int processVideo(const char* vfilename,
             for (int i=0; i!=68; ++i)
             {
                 //marks are rel to the cmig passed to sp()
-                int const x = marks[i].x() + croprec_A.x;//croprec.x; //+ drect_rel2crop.left();
-                int const y = marks[i].y() + croprec_A.y;//croprec.y; //+ drect_rel2crop.top();
-                //shape predictor can apparently give a point outside of the picture...
-                // ^culprit is face_detector, which can give a rectangle that may not be contained it the original image
-                //and you cant insert such a point to ocv's SubDiv2D
-                //so figure out what the max size to pass to ocv is
+                int const x = marks[i].x() + croprec_A.x;
+                int const y = marks[i].y() + croprec_A.y;
+                //see notes above drawDelaunay68() for an explanation of why following is needed.
                 max_x = Max(max_x, x);
                 max_y = Max(max_y, y);
 
                 min_x = Min(min_x, x);
                 min_y = Min(min_y, y);
-
+                ///@Requirement: store marks
                 all.marks68[i] = { (int16_t)x, (int16_t)y };
             }
-
-            auto leyeRect = getLeftRoi(vdata, all.marks68);//THEN THIS IS WRONG
+            ///@Requirement: get pupils
+            auto leyeRect = getLeftRoi(vdata, all.marks68);
             cv::Point leftEyeCoord = detectPupilHume(im, leyeRect);
 
-            auto reyeRect = getRightRoi(vdata, all.marks68);//THEN THIS IS WRONG
+            auto reyeRect = getRightRoi(vdata, all.marks68);
             cv::Point rightEyeCoord = detectPupilHume(im, reyeRect);
-
+            ///@Requirement: draw Delaunay
             drawDelaunay68(im, all.marks68, {min_x, min_y, max_x-min_x+1, max_y-min_y+1});//do after pupil detection
-            //AND HERE
+            //draw both the detected rectangle and the crop, just to show we can code things
             cv::rectangle(im, dlibRectangleToOpenCV(drect_rel2whole), CV_RGB(255, 255, 0), 2);//thickness
             cv::rectangle(im, croprec_A, CV_RGB(255, 69, 0), 2);
-            all.rotation = getPoseAndDraw(im, all.marks68).e;//2: store Euler angles. discard translation...
-            ///@TODO: above needs PAir16 param change
+            ///@Requirement: get pose
+            all.rotation = getPoseAndDraw(im, all.marks68).e;//discard translation
+
             auto const valid=[&vdata](cv::Point p){
                 return p.x>=0 && p.x<vdata.width && p.y>=0 && p.x<vdata.height;
-            };//end lambda
-            //3: store pupils
-            //I was drawing them before. If the video is good quality,
-            //the persons face is close to the camera and not moving much then it looks good.
-            //If not, its too imprecise and is detracting.
-            //Regardless, the FrameResults get filled, and that gets sent to where it needs to go.
+            };
+            //now actually store pupils, if not detected, previous {-1,-1} set will remain filled, signaling error
             if (valid(leftEyeCoord)) {
                 //cv::circle(im, leftEyeCoord, 3, CV_RGB(255, 255, 0), CV_FILLED, CV_AA, 0);
                 all.left_pupil = {int16_t(leftEyeCoord.x), int16_t(leftEyeCoord.y)};
@@ -362,20 +396,20 @@ int processVideo(const char* vfilename,
                 all.right_pupil = {int16_t(rightEyeCoord.x), int16_t(rightEyeCoord.y)};
             }
         }//end if have 68 points
-    Lwrite: //put stuff in db for random access and size consistency,
+    Lwrite: //put stuff in file for random access and size consistency,
             //expecting few errors, and successes (common case) will put data for every frame.
-        status[0]='t';
+        db.output_frame(all);///@Requirement: store in a file or database
+        status[0]='t';//at least one frame made it into the video
         vwriter.write(im);//the return type of this is void
-        db.do_something_with_results(all, videoid);//@DB
     }//for each frame
 
-    //if (!vwriter.release()) {}//returns void...
-    vwriter.release();
+    vwriter.release();//returns void
 
-    //@DB: The video metadata can  be sent now
-    vdata.nframes = final_nframes;
-
-    db.update_video(vdata, videoid);
+    if (cvfails > 0)
+    {
+        vdata.nframes -= cvfails;
+        db.fixup_header_ok(vdata);
+    }
 
     if (db.end_transaction_ok())
         status[1] = 't';
@@ -388,7 +422,7 @@ int processVideo(const char* vfilename,
     outsref.clear();
     outsref += (const char *)status;
     outsref += voutname.c_str();
-    //printf("%c%c %s", status[0], status[1], voutname.c_str());//put a newline?
+    //put a newline?
     fwrite(outsref.data(), 1, outsref.size(), stdout);
     return 0;
 }
@@ -442,9 +476,6 @@ int main(int argc, char **argv)
             trained = argv[3];
     }
 
-    DataBase db;
-    db.connect_ok();
-
     DLibFaceDetector faceRectFinder;
     DLibLandMarkDetector markDetector;
 
@@ -456,7 +487,7 @@ int main(int argc, char **argv)
     if (!daemon)
     {
         std::string stdstr;
-        return processVideo(argv[1], stdstr, videoid, faceRectFinder, markDetector, db);
+        return processVideo(argv[1], stdstr, videoid, faceRectFinder, markDetector);
     }
     else
     {
@@ -502,7 +533,7 @@ int main(int argc, char **argv)
             if (sscanf(buf, "%s %d", (char* )videofile, &videoid)!=2) {
                 fprintf(stderr, "packet in bad format: %s\n", buf); continue;  }
 
-            processVideo(videofile, sendpkt, videoid, faceRectFinder, markDetector, db);
+            processVideo(videofile, sendpkt, videoid, faceRectFinder, markDetector);
 
             if (sendto(sock, sendpkt.data(), sendpkt.size(), 0, (struct sockaddr *) &client_address, saddrlen) != 2)
                 perror("sendto()");
@@ -512,25 +543,24 @@ int main(int argc, char **argv)
     return 0;
 }
 
-//"/tmp/myserver.sock"
-
 /*
-    Somehow, shape_predictor can give you a point outside of the rectangle?
-    ^ so can face_predictor
-    And subdiv will throw an error on insert
+    Importance of testing for robust software (and also reading api docs carefully):
+
+    dlib's face_detector (aka object_detector, gives face ROI)
+    and shape_predictor (gives 68 landmarks)
+    can return a rect or points not contained within the original image.
+    However, cv::SubDiv2D::insert contract is the point must be contained in the
+    rect passed to the ctor or set via another method.
+
+    So, it is incorrect to pass {0, 0 frame width, frame height} (w and h probed at start).
+    To SubDiv.
 */
 void drawDelaunay68(cv::Mat& im, const PairInt16* lndmks, cv::Rect const rect)
-//void drawDelaunay68(cv::Mat& im, const lmCoord* lndmks, int max_x, int max_y)
 {
-    //cv::Size const dims = im.size();
-    //cv::Rect const rect = {0,0,dims.width,dims.height};
-    //cv::Rect const rect = {0,0,max_x+1,max_y+1};
-	cv::Subdiv2D subdiv(rect);//either rect, or points out of range?
-	//std::cout << "rect: "<< rect <<'\n';
+	cv::Subdiv2D subdiv(rect);
 	for (unsigned i=0; i!=68; ++i)
 	{
 		PairInt16 const dpt = lndmks[i];
-		//std::cout<<"point["<<i<<"] = " << dpt << '\n';
 		subdiv.insert(
             {
                 float(dpt.x()),
@@ -547,7 +577,7 @@ void drawDelaunay68(cv::Mat& im, const PairInt16* lndmks, cv::Rect const rect)
         const cv::Point pt0(t[0], t[1]);
         const cv::Point pt1(t[2], t[3]);
         const cv::Point pt2(t[4], t[5]);
-        //the known 68 can avoid this too
+
         if (rect.contains(pt0) && rect.contains(pt1) && rect.contains(pt2))
         {
             cv::line(im, pt0, pt1, delaunay_color, 1, CV_AA, 0);
@@ -558,15 +588,9 @@ void drawDelaunay68(cv::Mat& im, const PairInt16* lndmks, cv::Rect const rect)
     //do this after so points are on top of triangle edges, I think looks nicer
     for (unsigned i=0; i!=68; ++i)
 	{
-		PairInt16 const dpt = lndmks[i];//TODO, change radius based on dims
+		PairInt16 const dpt = lndmks[i];
 		cv::circle(im, cv::Point(dpt.x(), dpt.y()), 2, cv::Scalar(0, 0, 255), CV_FILLED, CV_AA, 0);
 	}
-}
-
-static inline
-cv::Point2d lmc2cv2d(const lmCoord v)
-{
-    return cv::Point2d(v.x(), v.y());
 }
 
 static
@@ -603,7 +627,7 @@ EulerAnglesF32 AxisAngle2Euler(const cv::Vec3d& axis_angle)
     cv::Matx33d rotation_matrix;
     cv::Rodrigues(axis_angle, rotation_matrix);
 
-    return rotationMatrixToEulerAngles(rotation_matrix);//learn opencv version
+    return rotationMatrixToEulerAngles(rotation_matrix);
 }
 
 extern
