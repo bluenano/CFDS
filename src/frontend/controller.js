@@ -120,22 +120,26 @@ app.controller('loginCtrl', function($scope, $http) {
 
                     if(result.success == true)
                     {
-                        localStorage.setItem("userid", result.userid);
-                        console.log(localStorage.getItem("userid")); 
+                        
+                        sessionStorage.setItem("userid", result.userid); 
+                       /*
                         $.ajax({
                             type:"GET",
                             url: "api/video/read_all",
-                            data: {userid: localStorage.getItem("userid")},
+                            data: {userid: sessionStorage.getItem("userid")},
                             cache:false,
                             success: function(videoJSON) {
                                 
                                 for (i = 0; i < videoJSON.length; i++) {
-                                    localStorage.setItem(i, videoJSON[i]["videoid"]);
-                                    console.log(localStorage.getItem(i));
+                                    sessionStorage.setItem(i.toString(), JSON.stringify(videoJSON[i]));
+                                    
+                                    //console.log(sessionStorage.getItem(i));
                                 }
-                                //window.location.href = "/cs160/test/home.html";
+                                
                             }
-                        });                       
+                        });   
+                        */
+                        window.location.href = "/cs160/test/home.html";                    
                     }
                     else
                     {
@@ -146,7 +150,36 @@ app.controller('loginCtrl', function($scope, $http) {
     }
 });
 
-app.controller('homeCtrl', function($scope) {
+app.controller('homeCtrl', function($scope) 
+{   
+    $.ajax({
+        type:"GET",
+        url: "api/video/read_all",
+        data: {userid: sessionStorage.getItem("userid")},
+        cache:false,
+        success: function(videoJSON) 
+        {
+
+        for (i = 0; i < videoJSON.length; i++) 
+        {
+            console.log(videoJSON[i]);
+            var videoid = videoJSON[i]["videoid"];
+            var title = videoJSON[i]["title"];
+            var uploaddate = videoJSON[i]["uploaddate"];
+            //console.log(videoid + " " + title + " " + uploaddate);
+            sessionStorage.setItem((i+1).toString(), videoid.toString());
+            var temp1 = title + ' ';
+            var temp2 = uploaddate + ' ';
+            var temp3 = videoid + ' ';
+
+
+
+
+        }
+                                
+        }
+    }); 
+
     $scope.upload = function() {
         window.location.href = "/cs160/test/upload.html";
     }
