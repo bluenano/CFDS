@@ -11,6 +11,13 @@ include_once '../shared/database.php';
 include_once '../shared/utilities.php';
 
 
+if (!isset($_POST['userid'])) {
+    exit_script_on_failure('POST_ERROR');
+}
+
+$user_id = $_POST['userid'];
+
+
 if ($_FILES[0]['error'] != UPLOAD_ERR_OK) {
     exit_script_on_failure('UPLOAD_ERROR');
 }
@@ -53,7 +60,7 @@ unlink('error.log');
 
 // this needs to be changed, must insert video first to get
 // a video id
-$user_id = 1;
+
 $output = array();
 $insert_into_db = "php ../video/create.php $user_id $file_name $uploads_file";
 exec($insert_into_db, $output);

@@ -26,13 +26,15 @@ if (is_null($file_path)) {
 $file_name = basename($file_path);
 $play_dir = SITE_ROOT . '/test/';
 $play_file = $play_dir . $file_name;
+
+
 if (!copy($file_path, $play_file)) {
-    exit_script_on_failure("COPY_ERROR");
+    exit_script_on_failure("COPY_ERROR1");
 }
 
 
 if (!rename($play_file, $play_dir . 'currentVideo')) {
-    exit_script_on_failure("COPY_ERROR");
+    exit_script_on_failure("COPY_ERROR2");
 }
 
 echo json_encode(array('success' => TRUE));

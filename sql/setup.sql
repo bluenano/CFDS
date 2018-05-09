@@ -72,11 +72,3 @@ CREATE TABLE IF NOT EXISTS openfacedata (
     frameid INT REFERENCES frame(frameid)
 );
 
-
-/* with this, above is obsolete */
-/*
-CREATE TABLE IF NOT EXISTS landmarks (
-    frameid INT REFERENCES frame(frameid)
-    data BYTEA
-);
-*/
