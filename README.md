@@ -25,17 +25,3 @@ sudo make install <br />
 Building C++ programs using libpqxx: <br />
 g++ -std=c++11 src.cpp -lpqxx -lpq <br />
 <br />
-Note to Code Reviewers: <br />
-<br />
-Our webpages are not fully routed yet.<br />
-We have not implemented the ability to play an uploaded video in <br />
-a webpage and the ability to delete an uploaded video. <br />
-<br />
-Here is a description of some directories to make your review easier:  <br /> 
-<br />
-Front-End - html, css, js files <br /> 
-api - php and configuration files for our backend infrastructure <br />
-bin - script to setup a local version of our project in a directory recognized by apache <br />
-sql - erd diagram and sql script to create our database tables <br />
-src - test programs for database and video processing tasks <br />
-vidproc - video processing code <br />
